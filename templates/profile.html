@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="text-center mb-5">
+
+  {% if profile.profile_image %}
+    <img src="{{ profile.profile_image }}" class="rounded-circle mb-3"
+         style="width:120px;height:120px;object-fit:cover;">
+  {% endif %}
+
+  <h2 class="fw-bold">{{ profile.username }}</h2>
+
+  {% if profile.bio %}
+    <p class="mt-3">{{ profile.bio }}</p>
+  {% endif %}
+
+  {% if user and user['id'] != profile['id'] %}
+    {% if is_following %}
+      <a href="/unfollow/{{ profile['id'] }}" class="btn btn-coral mt-3">Unfollow</a>
+    {% else %}
+      <a href="/follow/{{ profile['id'] }}" class="btn btn-teal mt-3">Follow</a>
+    {% endif %}
+  {% endif %}
+</div>
+
+<h3 class="mb-4 text-center">Posts</h3>
+
+{% for p in posts %}
+  <div class="post-card bg-light-glass p-4 mb-4">
+
+    {% if p.content %}
+      <p class="fs-5">{{ p.content }}</p>
+    {% endif %}
+
+    {% if p.image %}
+      <img src="{{ p.image }}" class="post-image mb-3 w-100">
+    {% endif %}
+
+    {% if p.link %}
+      <div class="ratio ratio-16x9 mt-3 mb-3">
+        <iframe src="{{ p.link }}" allowfullscreen></iframe>
+      </div>
+    {% endif %}
+
+    <div class="text-end">
+      <span class="badge bg-danger p-2">😊 {{ p.smiles }}</span>
+    </div>
+
+  </div>
+{% endfor %}
+
+{% endblock %}

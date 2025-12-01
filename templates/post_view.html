@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Post by {{ post.username }}{% endblock %}
+
+{% block content %}
+<div class="container py-4 post-page">
+    
+    {% if post is defined and post %}
+    
+    <h1 class="page-title">Post by @{{ post.username }}</h1>
+
+    <div class="post-card single-post">
+        
+        {% if post.image %}
+            <img src="{{ post.image }}"
+                 class="post-image-large"
+                 alt="Post Image">
+        {% endif %}
+
+        <div class="post-body">
+
+            {% if post.content %}
+                <p class="post-content-text">{{ post.content }}</p>
+            {% endif %}
+
+            {% if post.link %}
+            <p>
+                <a href="{{ post.link }}" class="story-link" target="_blank">
+                    🔗 Read External Source
+                </a>
+            </p>
+            {% endif %}
+
+            <hr class="section-divider">
+
+            <div class="d-flex justify-content-between align-items-center">
+                
+                <div class="post-meta">
+                    Posted by 
+                    <a href="{{ url_for('user_profile', username=post.username) }}">@{{ post.username }}</a>
+                    — {{ post.timestamp }}
+                </div>
+                
+                <form action="{{ url_for('smile', post_id=post.id) }}" method="POST" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    
+                    <button type="submit" class="btn btn-smile {% if post.has_smiled %}btn-smile-active{% endif %}">
+                        {% if post.has_smiled %}
+                            😊 Smiled ({{ post.smiles }})
+                        {% else %}
+                            😐 Smile? ({{ post.smiles }})
+                        {% endif %}
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    {% else %}
+        <h2 class="page-title text-danger">Post Not Found</h2>
+        <p class="text-center text-muted">Sorry, we couldn't find that particular post.</p>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <h1 class="page-title text-danger">404 - Not Found 😟</h1>
+    <p class="fs-5 text-muted mb-4">
+        Oops! We couldn't find the page you were looking for. Maybe it went looking for a smile elsewhere?
+    </p>
+    <a href="{{ url_for('feed') }}" class="btn btn-primary btn-lg">Back to the Feed</a>
+</div>
+{% endblock %}

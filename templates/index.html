@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    {% if posts %}
+        <div class="post-list">
+            {% for post in posts %}
+            <div class="post-card">
+
+                <a href="{{ url_for('post', post_id=post['id']) }}">
+                    {% if post['image_path'] %}
+                        <img src="{{ url_for('static', filename='uploads/' ~ post['image_path']) }}"
+                             class="post-image"
+                             alt="Post Image">
+                    {% endif %}
+                </a>
+
+                <div class="post-body">
+                    <a class="post-text-link"
+                       href="{{ url_for('post', post_id=post['id']) }}">
+                       {{ post['text'] }}
+                    </a>
+
+                    {% if post['link'] %}
+                    <div>
+                        <a href="{{ post['link'] }}" class="story-link" target="_blank">
+                            {{ post['link'] }}
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    <div class="post-meta">
+                        ⭐ {{ post['smiles'] }}
+                        — by <a href="{{ url_for('profile', user_id=post['user_id']) }}">
+                            {{ post['username'] }}
+                          </a>
+                        — {{ post['created_at'] }}
+                    </div>
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-center">No posts yet!</p>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,4 @@
+.env
+booncheery.db
+/static/uploads/
+.venv/

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <h1 class="page-title text-danger">500 - Server Error 😬</h1>
+    <p class="fs-5 text-muted mb-4">
+        Something went wrong on our end. The server dropped its ice cream cone.
+        Please try again in a moment!
+    </p>
+    <a href="{{ url_for('feed') }}" class="btn btn-primary btn-lg">Back to the Feed</a>
+</div>
+{% endblock %}
