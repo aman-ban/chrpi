@@ -10,6 +10,8 @@ from PIL import Image
 from textblob import TextBlob
 from flask_wtf.csrf import CSRFProtect
 from dotenv import load_dotenv
+import requests
+from bs4 import BeautifulSoup
 
 load_dotenv()
 
@@ -146,6 +148,38 @@ def get_safe_redirect(target):
         return url_for('feed')
     return target
 
+
+def get_link_preview_image(url: str):
+    """Fetches the og:image URL from an external link's metadata."""
+    if not url:
+        return ""
+
+    try:
+        # Use a user-agent to avoid being blocked by some sites
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        response = requests.get(url, headers=headers, timeout=5)
+        response.raise_for_status()  # Raise exception for bad status codes
+
+        soup = BeautifulSoup(response.content, 'html.parser')
+
+        # 1. Look for the og:image tag (standard for social media previews)
+        og_image = soup.find("meta", property="og:image")
+        if og_image and og_image.get("content"):
+            image_url = og_image.get("content")
+
+            # CRITICAL: Ensure the URL is absolute before saving.
+            # If it's relative (e.g., /images/preview.jpg), join it with the base URL.
+            return urljoin(url, image_url)
+
+        # 2. Fallback: Look for a standard favicon or first image
+        favicon = soup.find("link", rel="icon")
+        if favicon and favicon.get("href"):
+            return urljoin(url, favicon.get("href"))
+
+    except Exception as e:
+        print(f"DEBUG: Failed to get link preview for {url}. Error: {e}")
+        return ""
+    return ""
 
 # --- Routes ---
 @app.before_request
@@ -313,8 +347,16 @@ def create_post():
             return redirect("/post")
 
     image_path = ""
+
+    # 1. Check for user-uploaded image first
     if has_image:
         image_path = save_image(image_file)
+
+    # 2. If no user image AND a link is present, scrape the link for a preview image
+    elif link:
+        # We don't save the remote image locally, we save the remote URL directly to the database
+        image_path = get_link_preview_image(link)
+
 
     db = get_db()
     db.execute(
@@ -324,7 +366,7 @@ def create_post():
     db.commit()
 
     flash("Your post has been shared!")
-    return redirect("/feed")
+    return redirect(url_for('feed'))
 
 
 @app.route('/smile/<int:post_id>', methods=['POST'])
