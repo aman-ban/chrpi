@@ -88,6 +88,7 @@ def init_db():
     CREATE TABLE IF NOT EXISTS post_smiles (
         user_id INTEGER,
         post_id INTEGER,
+        reaction_emoji TEXT DEFAULT '😊', -- NEW: Store the specific emoji here
         UNIQUE (user_id, post_id)
     );
     """)
@@ -373,16 +374,37 @@ def create_post():
 def smile(post_id):
     me = current_user()
     if not me:
-        return redirect("/login")
+        return redirect(url_for('login'))
+
+    # NEW: Get the reaction from the form submission (default to a smile)
+    reaction = request.form.get("reaction", "😊")
 
     db = get_db()
 
+    # Check if the user has already reacted to this post
     existing = db.execute("SELECT 1 FROM post_smiles WHERE user_id = ? AND post_id = ?",
                           (me["id"], post_id)).fetchone()
 
+    # Define a set of allowed emojis
+    ALLOWED_EMOJIS = {"😊", "😂", "🥹"}
+
+    if reaction not in ALLOWED_EMOJIS:
+        # Default to the standard smile if an invalid emoji is sent
+        reaction = "😊"
+
     if not existing:
-        db.execute("INSERT INTO post_smiles (user_id, post_id) VALUES (?, ?)", (me["id"], post_id))
+        # If no existing smile, insert the new reaction and increment total smiles
+        db.execute("INSERT INTO post_smiles (user_id, post_id, reaction_emoji) VALUES (?, ?, ?)",
+                   (me["id"], post_id, reaction))
         db.execute("UPDATE posts SET smiles = smiles + 1 WHERE id = ?", (post_id,))
+        db.commit()
+    else:
+        # User already reacted. If they click a different button, update the reaction
+        # but DON'T change the smiles count (since it's a unique reaction per user).
+        # We could also use this logic to allow the user to 'un-smile' if the reaction
+        # is the same, but for simplicity, let's allow them to change the type of smile.
+        db.execute("UPDATE post_smiles SET reaction_emoji = ? WHERE user_id = ? AND post_id = ?",
+                   (reaction, me["id"], post_id))
         db.commit()
 
     return redirect(get_safe_redirect(request.referrer))
@@ -400,8 +422,18 @@ def feed():
             posts.*, 
             users.username, 
             users.profile_image,
-            (SELECT 1 FROM post_smiles WHERE post_smiles.post_id = posts.id AND post_smiles.user_id = ?) as has_smiled
-        FROM posts 
+            -- Get the user's specific reaction if it exists
+            (SELECT reaction_emoji FROM post_smiles WHERE post_smiles.post_id = posts.id AND post_smiles.user_id = ?) as user_reaction,
+            -- Get the top 3 most common reactions and their counts for display
+            (SELECT GROUP_CONCAT(reaction_emoji || ':' || reaction_count) 
+             FROM (SELECT reaction_emoji, COUNT(*) as reaction_count 
+                   FROM post_smiles 
+                   WHERE post_id = posts.id 
+                   GROUP BY reaction_emoji 
+                   ORDER BY reaction_count DESC 
+                   LIMIT 3)
+            ) as top_reactions
+        FROM posts
         JOIN users ON posts.user_id = users.id
         JOIN follows ON posts.user_id = follows.followed_id
         WHERE follows.follower_id = ?
@@ -422,7 +454,17 @@ def top():
             posts.*, 
             users.username, 
             users.profile_image,
-            (SELECT 1 FROM post_smiles WHERE post_smiles.post_id = posts.id AND post_smiles.user_id = ?) as has_smiled
+            -- Get the user's specific reaction if it exists
+            (SELECT reaction_emoji FROM post_smiles WHERE post_smiles.post_id = posts.id AND post_smiles.user_id = ?) as user_reaction,
+            -- Get the top 3 most common reactions and their counts for display
+            (SELECT GROUP_CONCAT(reaction_emoji || ':' || reaction_count) 
+             FROM (SELECT reaction_emoji, COUNT(*) as reaction_count 
+                   FROM post_smiles 
+                   WHERE post_id = posts.id 
+                   GROUP BY reaction_emoji 
+                   ORDER BY reaction_count DESC 
+                   LIMIT 3)
+            ) as top_reactions
         FROM posts
         JOIN users ON posts.user_id = users.id
         ORDER BY posts.smiles DESC, posts.timestamp DESC
@@ -443,8 +485,18 @@ def view_single_post(post_id):
             posts.*, 
             users.username, 
             users.profile_image,
-            (SELECT 1 FROM post_smiles WHERE post_smiles.post_id = posts.id AND post_smiles.user_id = ?) as has_smiled
-        FROM posts 
+            -- Get the user's specific reaction if it exists
+            (SELECT reaction_emoji FROM post_smiles WHERE post_smiles.post_id = posts.id AND post_smiles.user_id = ?) as user_reaction,
+            -- Get the top 3 most common reactions and their counts for display
+            (SELECT GROUP_CONCAT(reaction_emoji || ':' || reaction_count) 
+             FROM (SELECT reaction_emoji, COUNT(*) as reaction_count 
+                   FROM post_smiles 
+                   WHERE post_id = posts.id 
+                   GROUP BY reaction_emoji 
+                   ORDER BY reaction_count DESC 
+                   LIMIT 3)
+            ) as top_reactions
+        FROM posts
         JOIN users ON posts.user_id = users.id
         WHERE posts.id = ?
     """, (me["id"] if me else 0, post_id)).fetchone()
