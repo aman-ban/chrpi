@@ -1,4 +1,4 @@
 .env
-booncheery.db
+chrpi.db
 /static/uploads/
 .venv/

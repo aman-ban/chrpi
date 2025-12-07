@@ -18,7 +18,7 @@ load_dotenv()
 # --- Config ---
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(APP_DIR, "static", "uploads")
-DB_PATH = os.path.join(APP_DIR, "booncheery.db")
+DB_PATH = os.path.join(APP_DIR, "chrpi.db")
 ALLOWED_EXT = {"png", "jpg", "jpeg", "gif"}
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 

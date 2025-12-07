@@ -1,9 +1,9 @@
 
-# ☀️ BoonCheery: A Positive Social Media Platform
+# ☀️ chrpi: A Positive Social Media Platform
 
 ## Table of Contents
 
-1.  [About BoonCheery](#about-booncheery)
+1.  [About chrpi](#about-chrpi)
 2.  [Features](#features)
 3.  [Color Palette](#color-palette)
 4.  [Technology Stack](#technology-stack)
@@ -15,9 +15,9 @@
 
 ---
 
-## 1. About BoonCheery
+## 1. About chrpi
 
-BoonCheery is a Flask-based micro-social network dedicated exclusively to sharing positive and uplifting content. In a world saturated with negativity, BoonCheery filters out sad, angry, or pessimistic posts, ensuring a feed that only brings joy and optimism to its users.
+chrpi is a Flask-based micro-social network dedicated exclusively to sharing positive and uplifting content. In a world saturated with negativity, BoonCheery filters out sad, angry, or pessimistic posts, ensuring a feed that only brings joy and optimism to its users.
 
 The core principle is simple: **If it doesn't bring a smile, it doesn't get posted.**
 
@@ -37,7 +37,7 @@ The core principle is simple: **If it doesn't bring a smile, it doesn't get post
 
 ## 3. Color Palette
 
-BoonCheery uses a cheerful and optimistic palette:
+chrpi uses a cheerful and optimistic palette:
 
 | Color Name | Hex Code | Usage |
 | :--- | :--- | :--- |
@@ -76,7 +76,7 @@ You will need the following installed:
 1.  **Clone the Repository:**
     ```bash
     git clone [https://github.com/your-username/BoonCheery-App.git](https://github.com/your-username/BoonCheery-App.git)
-    cd BoonCheery-App
+    cd chrpi-App
     ```
 
 2.  **Create and Activate Virtual Environment:**
@@ -132,7 +132,7 @@ The application uses an SQLite database (`booncheery.db`) with the following tab
 
 ## 7. Security and Sentiment Filtering
 
-BoonCheery enforces positivity using:
+chrpi enforces positivity using:
 
 * **Sentiment Analysis:** The `create_post` route utilizes `TextBlob` to check if the post's polarity is `>= -0.1` (neutral or positive) before allowing submission.
 * **CSRF Protection:** Implemented using `Flask-WTF` to secure all POST requests.
