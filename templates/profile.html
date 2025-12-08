@@ -1,52 +1,50 @@
 {% extends "base.html" %}
+
+{% block title %}@{{ profile.username }}'s Profile{% endblock %}
+
 {% block content %}
+<div class="container py-4">
+    <div class="profile-header">
+        <img src="{{ profile.profile_image if profile.profile_image else url_for('static', filename='default-profile.png') }}"
+             alt="{{ profile.username }}" class="profile-image-large">
 
-<div class="text-center mb-5">
+        <h1 class="page-title">@{{ profile.username }}</h1>
+        <p class="profile-bio">{{ profile.bio if profile.bio else "A cheerful new chrpi user!" }}</p>
 
-  {% if profile.profile_image %}
-    <img src="{{ profile.profile_image }}" class="rounded-circle mb-3"
-         style="width:120px;height:120px;object-fit:cover;">
-  {% endif %}
+        {% if user %}
 
-  <h2 class="fw-bold">{{ profile.username }}</h2>
+            {% if user.id != profile.id %}
+                <form method="POST" action="{{ url_for('follow', user_id=profile.id) if not is_following else url_for('unfollow', user_id=profile.id) }}" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
-  {% if profile.bio %}
-    <p class="mt-3">{{ profile.bio }}</p>
-  {% endif %}
+                    <button type="submit" class="btn {% if is_following %}btn-secondary{% else %}btn-primary{% endif %}">
+                        {% if is_following %}
+                            Unfollow
+                        {% else %}
+                            Follow {{ profile.username }}
+                        {% endif %}
+                    </button>
+                </form>
+            {% else %}
+                <a href="{{ url_for('edit_profile') }}" class="btn btn-secondary">
+                    Edit Your Profile
+                </a>
+            {% endif %}
 
-  {% if user and user['id'] != profile['id'] %}
-    {% if is_following %}
-      <a href="/unfollow/{{ profile['id'] }}" class="btn btn-coral mt-3">Unfollow</a>
-    {% else %}
-      <a href="/follow/{{ profile['id'] }}" class="btn btn-teal mt-3">Follow</a>
-    {% endif %}
-  {% endif %}
-</div>
-
-<h3 class="mb-4 text-center">Posts</h3>
-
-{% for p in posts %}
-  <div class="post-card bg-light-glass p-4 mb-4">
-
-    {% if p.content %}
-      <p class="fs-5">{{ p.content }}</p>
-    {% endif %}
-
-    {% if p.image %}
-      <img src="{{ p.image }}" class="post-image mb-3 w-100">
-    {% endif %}
-
-    {% if p.link %}
-      <div class="ratio ratio-16x9 mt-3 mb-3">
-        <iframe src="{{ p.link }}" allowfullscreen></iframe>
-      </div>
-    {% endif %}
-
-    <div class="text-end">
-      <span class="badge bg-danger p-2">😊 {{ p.smiles }}</span>
+        {% endif %}
     </div>
 
-  </div>
-{% endfor %}
+    <hr>
 
+    <h2>{{ profile.username }}'s Posts</h2>
+
+    <div class="post-list">
+        {% for post in posts %}
+            {% include 'post_card_template.html' %}
+        {% else %}
+            <p class="text-muted">No posts shared yet.</p>
+        {% endfor %}
+    </div>
+
+</div>
 {% endblock %}

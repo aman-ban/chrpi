@@ -1,0 +1,64 @@
+<div class="post-card">
+    <div class="post-body">
+
+        <a href="{{ url_for('view_single_post', post_id=post.id) }}" class="text-decoration-none">
+
+            {% if post.content %}
+                <p class="post-content-text">{{ post.content }}</p>
+            {% endif %}
+
+            {% if post.link %}
+                <p>
+                    <a href="{{ post.link }}" target="_blank" class="story-link">
+                        🔗 View External Story
+                    </a>
+                </p>
+            {% endif %}
+
+        </a>
+
+        {% if post.image %}
+            <img src="{{ post.image }}" class="post-image" alt="Post image">
+        {% endif %}
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+
+            <div class="d-flex align-items-center reaction-area">
+                {% set allowed_emojis = ["😊", "😂", "🥹"] %}
+
+                {% for emoji in allowed_emojis %}
+                <form action="{{ url_for('smile', post_id=post.id) }}" method="POST" style="display:inline-block; margin-right: 5px;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" name="reaction" value="{{ emoji }}"/>
+
+                    <button type="submit"
+                            class="btn btn-sm btn-smile
+                                   {% if post.user_reaction == emoji %}btn-smile-active{% endif %}"
+                            title="React with {{ emoji }}">
+                        {{ emoji }}
+                    </button>
+                </form>
+                {% endfor %}
+
+                <span class="post-meta ms-2 total-smiles-display">
+                    {% if post.top_reactions %}
+                        {% for reaction_pair in post.top_reactions.split(',') %}
+                            {% set parts = reaction_pair.split(':') %}
+                            <span class="badge bg-light text-dark me-1" title="{{ parts[1] }} reactions with {{ parts[0] }}">
+                                {{ parts[0] }} {{ parts[1] }}
+                            </span>
+                        {% endfor %}
+                    {% else %}
+                        Total Smiles: {{ post.smiles }}
+                    {% endif %}
+                </span>
+            </div>
+
+            <div class="post-meta">
+                Posted by
+                <a href="{{ url_for('user_profile', username=post.username) }}">@{{ post.username }}</a>
+                — {{ post.timestamp }}
+            </div>
+        </div>
+    </div>
+</div>
