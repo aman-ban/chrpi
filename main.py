@@ -386,7 +386,7 @@ def smile(post_id):
                           (me["id"], post_id)).fetchone()
 
     # Define a set of allowed emojis
-    ALLOWED_EMOJIS = {"😊", "😂", "🥹"}
+    ALLOWED_EMOJIS = ['😊', '😂', '🥹', '🥰', '🤩', '🥳']
 
     if reaction not in ALLOWED_EMOJIS:
         # Default to the standard smile if an invalid emoji is sent
@@ -399,10 +399,6 @@ def smile(post_id):
         db.execute("UPDATE posts SET smiles = smiles + 1 WHERE id = ?", (post_id,))
         db.commit()
     else:
-        # User already reacted. If they click a different button, update the reaction
-        # but DON'T change the smiles count (since it's a unique reaction per user).
-        # We could also use this logic to allow the user to 'un-smile' if the reaction
-        # is the same, but for simplicity, let's allow them to change the type of smile.
         db.execute("UPDATE post_smiles SET reaction_emoji = ? WHERE user_id = ? AND post_id = ?",
                    (reaction, me["id"], post_id))
         db.commit()
