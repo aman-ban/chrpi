@@ -27,32 +27,29 @@
                 {% set allowed_emojis = ['😊', '😂', '🥹', '🥰', '🤩', '🥳'] %}
 
                 {% for emoji in allowed_emojis %}
-                <form action="{{ url_for('smile', post_id=post.id) }}" method="POST" style="display:inline-block; margin-right: 5px;">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <input type="hidden" name="reaction" value="{{ emoji }}"/>
 
-                    <button type="submit"
-                            class="btn btn-sm btn-smile
-                                   {% if post.user_reaction == emoji %}btn-smile-active{% endif %}"
-                            title="React with {{ emoji }}">
-                        {{ emoji }}
-                    </button>
-                </form>
+                    {% set count = post.reaction_counts_dict.get(emoji, 0) %}
+
+                    <form action="{{ url_for('smile', post_id=post.id) }}" method="POST" style="display:inline-block; margin-right: 5px;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <input type="hidden" name="reaction" value="{{ emoji }}"/>
+
+                        <button type="submit"
+                                class="btn btn-sm btn-smile
+                                       {% if post.user_reaction == emoji %}btn-smile-active{% endif %}"
+                                title="React with {{ emoji }}">
+                            {{ emoji }}
+                        </button>
+
+                        {% if count > 0 %}
+                            <div class="reaction-count-display text-center small fw-bold">
+                                {{ count }}
+                            </div>
+                        {% endif %}
+                    </form>
                 {% endfor %}
 
-                <span class="post-meta ms-2 total-smiles-display">
-                    {% if post.top_reactions %}
-                        {% for reaction_pair in post.top_reactions.split(',') %}
-                            {% set parts = reaction_pair.split(':') %}
-                            <span class="badge bg-light text-dark me-1" title="{{ parts[1] }} reactions with {{ parts[0] }}">
-                                {{ parts[0] }} {{ parts[1] }}
-                            </span>
-                        {% endfor %}
-                    {% else %}
-                        Total Smiles: {{ post.smiles }}
-                    {% endif %}
-                </span>
-            </div>
+                </div>
 
             <div class="post-meta">
                 Posted by
