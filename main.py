@@ -2,6 +2,7 @@ import os
 import sqlite3
 import uuid
 import random
+from datetime import datetime
 from flask import Flask, render_template, request, redirect, session, g, flash, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -13,6 +14,7 @@ from dotenv import load_dotenv
 import requests
 from bs4 import BeautifulSoup
 
+# Load environment variables (like FLASK_SECRET_KEY)
 load_dotenv()
 
 # --- Config ---
@@ -28,6 +30,31 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # Initialize CSRF Protection
 csrf = CSRFProtect(app)
+
+
+# --- Jinja Filter (NEW) ---
+def format_datetime(value, format='%m/%d/%y, %I:%M%p'):
+    """Formats a datetime object or string into the 'MM/DD/YY, HH:MMam/pm' string format."""
+    if value is None:
+        return ""
+
+    # If value is a string from SQLite, convert it to a datetime object
+    if isinstance(value, str):
+        try:
+            # Common SQLite datetime format is YYYY-MM-DD HH:MM:SS
+            # We split by '.' to ignore milliseconds if they exist
+            value = datetime.strptime(value.split('.')[0], '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            return value  # Return original value if parsing fails
+
+    # Format and convert am/pm to lowercase
+    return value.strftime(format).replace(' 0', ' ').lower()
+
+
+app.jinja_env.filters['datetime'] = format_datetime
+
+
+# ---------------------------
 
 
 # --- DB helpers ---
@@ -83,7 +110,9 @@ def init_db():
     );
     """)
 
-    # Post Smiles Table
+    # Post Smiles Table (Includes reaction_emoji update logic)
+    # Note: If running this after initial tables were created, you might need ALTER TABLE
+    # However, this CREATE IF NOT EXISTS handles the initial setup.
     db.execute("""
     CREATE TABLE IF NOT EXISTS post_smiles (
         user_id INTEGER,
@@ -128,7 +157,7 @@ def save_image(file_storage, resize_to=900):
 
 def analyze_sentiment(text: str):
     """
-    Returns True if sentiment is positive or neutral.
+    Returns True if sentiment is positive or neutral (polarity >= -0.1).
     Returns False if sentiment is negative.
     """
     if not text:
@@ -144,7 +173,7 @@ def get_safe_redirect(target):
     """Ensures we don't redirect users to external phishing sites."""
     if not target:
         return url_for('feed')
-    target_url = urlparse(target)  # <--- FIXED USAGE
+    target_url = urlparse(target)
     if target_url.netloc != '' and target_url.netloc != request.host:
         return url_for('feed')
     return target
@@ -169,7 +198,6 @@ def get_link_preview_image(url: str):
             image_url = og_image.get("content")
 
             # CRITICAL: Ensure the URL is absolute before saving.
-            # If it's relative (e.g., /images/preview.jpg), join it with the base URL.
             return urljoin(url, image_url)
 
         # 2. Fallback: Look for a standard favicon or first image
@@ -181,6 +209,7 @@ def get_link_preview_image(url: str):
         print(f"DEBUG: Failed to get link preview for {url}. Error: {e}")
         return ""
     return ""
+
 
 # --- Routes ---
 @app.before_request
@@ -270,7 +299,6 @@ def edit_profile():
         db.execute("UPDATE users SET bio = ?, profile_image = ? WHERE id = ?",
                    (bio, filename, user["id"]))
         db.commit()
-        flash("Profile updated.")
         return redirect(url_for("user_profile", username=user["username"]))
 
     return render_template("edit_profile.html", user=user)
@@ -355,9 +383,7 @@ def create_post():
 
     # 2. If no user image AND a link is present, scrape the link for a preview image
     elif link:
-        # We don't save the remote image locally, we save the remote URL directly to the database
         image_path = get_link_preview_image(link)
-
 
     db = get_db()
     db.execute(
@@ -376,7 +402,7 @@ def smile(post_id):
     if not me:
         return redirect(url_for('login'))
 
-    # NEW: Get the reaction from the form submission (default to a smile)
+    # Get the reaction from the form submission (default to a smile)
     reaction = request.form.get("reaction", "😊")
 
     db = get_db()
@@ -385,7 +411,7 @@ def smile(post_id):
     existing = db.execute("SELECT 1 FROM post_smiles WHERE user_id = ? AND post_id = ?",
                           (me["id"], post_id)).fetchone()
 
-    # Define a set of allowed emojis
+    # Define a set of allowed emojis (UPDATED)
     ALLOWED_EMOJIS = ['😊', '😂', '🥹', '🥰', '🤩', '🥳']
 
     if reaction not in ALLOWED_EMOJIS:
@@ -399,6 +425,7 @@ def smile(post_id):
         db.execute("UPDATE posts SET smiles = smiles + 1 WHERE id = ?", (post_id,))
         db.commit()
     else:
+        # Update the existing reaction
         db.execute("UPDATE post_smiles SET reaction_emoji = ? WHERE user_id = ? AND post_id = ?",
                    (reaction, me["id"], post_id))
         db.commit()
@@ -475,7 +502,6 @@ def view_single_post(post_id):
     me = current_user()
     db = get_db()
 
-    # Use a SQL query to fetch the single post, joining user info and smile status
     post = db.execute("""
         SELECT 
             posts.*, 
@@ -500,8 +526,8 @@ def view_single_post(post_id):
     if not post:
         return "Post not found", 404
 
-    # We will rename the template to 'post_view.html' in the next step
     return render_template('post_view.html', post=post, user=me, title=f"Post by {post['username']}")
+
 
 # --- Error Handlers ---
 @app.errorhandler(404)
@@ -509,10 +535,12 @@ def page_not_found(e):
     # Renders a 404.html template and sends a 404 HTTP status code
     return render_template('404.html'), 404
 
+
 @app.errorhandler(500)
 def internal_server_error(e):
     # Renders a 500.html template and sends a 500 HTTP status code
     return render_template('500.html'), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)
