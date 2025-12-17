@@ -306,9 +306,53 @@ def user_profile(username):
                        (me["id"], profile["id"])).fetchone()
         is_following = bool(q)
 
-    posts = db.execute("SELECT * FROM posts WHERE user_id = ? ORDER BY timestamp DESC", (profile["id"],)).fetchall()
+    # UPDATED QUERY: Join users and fetch reaction data (same as feed)
+    posts = db.execute("""
+        SELECT 
+            posts.*, 
+            users.username, 
+            users.profile_image,
+            -- Get the user's specific reaction if it exists
+            (SELECT reaction_emoji FROM post_smiles WHERE post_smiles.post_id = posts.id AND post_smiles.user_id = ?) as user_reaction,
+            -- Get the top 3 most common reactions
+            (SELECT GROUP_CONCAT(reaction_emoji || ':' || reaction_count) 
+             FROM (SELECT reaction_emoji, COUNT(*) as reaction_count 
+                   FROM post_smiles 
+                   WHERE post_id = posts.id 
+                   GROUP BY reaction_emoji 
+                   ORDER BY reaction_count DESC 
+                   LIMIT 3)
+            ) as top_reactions
+        FROM posts
+        JOIN users ON posts.user_id = users.id
+        WHERE posts.user_id = ?
+        ORDER BY posts.timestamp DESC
+    """, (me["id"] if me else 0, profile["id"])).fetchall()
 
-    return render_template("profile.html", profile=profile, posts=posts, user=me, is_following=is_following)
+    # UPDATED LOGIC: Process the raw rows into dictionaries with reaction counts
+    processed_posts = []
+    for post in posts:
+        post_dict = dict(post)
+        reaction_counts = {emoji: 0 for emoji in ALLOWED_EMOJIS}
+
+        if post_dict['top_reactions']:
+            for item in post_dict['top_reactions'].split(','):
+                try:
+                    emoji, count = item.split(':')
+                    reaction_counts[emoji] = int(count)
+                except ValueError:
+                    continue
+
+        post_dict['reaction_counts_dict'] = reaction_counts
+        processed_posts.append(post_dict)
+
+    # UPDATED RETURN: Pass processed_posts and allowed_emojis
+    return render_template("profile.html",
+                           profile=profile,
+                           posts=processed_posts,
+                           user=me,
+                           is_following=is_following,
+                           allowed_emojis=ALLOWED_EMOJIS)
 
 
 @app.route("/follow/<int:user_id>", methods=["POST"])
