@@ -7,7 +7,7 @@ from flask import Flask, render_template, request, redirect, session, g, flash, 
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from urllib.parse import urlparse, urljoin
-from PIL import Image
+from PIL import Image, ImageOps
 from textblob import TextBlob
 from flask_wtf.csrf import CSRFProtect
 from dotenv import load_dotenv
@@ -139,13 +139,20 @@ def save_image(file_storage, resize_to=900):
     ext = filename.rsplit(".", 1)[1].lower()
     new_name = f"{uuid.uuid4().hex}.{ext}"
     path = os.path.join(app.config["UPLOAD_FOLDER"], new_name)
+
     file_storage.save(path)
+
     try:
         img = Image.open(path)
+
+        img = ImageOps.exif_transpose(img)
+
         img.thumbnail((resize_to, resize_to))
         img.save(path)
-    except Exception:
+    except Exception as e:
+        print(f"Error saving image: {e}")
         pass
+
     return f"/static/uploads/{new_name}"
 
 
@@ -306,7 +313,6 @@ def user_profile(username):
                        (me["id"], profile["id"])).fetchone()
         is_following = bool(q)
 
-    # UPDATED QUERY: Join users and fetch reaction data (same as feed)
     posts = db.execute("""
         SELECT 
             posts.*, 
@@ -329,7 +335,6 @@ def user_profile(username):
         ORDER BY posts.timestamp DESC
     """, (me["id"] if me else 0, profile["id"])).fetchall()
 
-    # UPDATED LOGIC: Process the raw rows into dictionaries with reaction counts
     processed_posts = []
     for post in posts:
         post_dict = dict(post)
@@ -346,7 +351,6 @@ def user_profile(username):
         post_dict['reaction_counts_dict'] = reaction_counts
         processed_posts.append(post_dict)
 
-    # UPDATED RETURN: Pass processed_posts and allowed_emojis
     return render_template("profile.html",
                            profile=profile,
                            posts=processed_posts,

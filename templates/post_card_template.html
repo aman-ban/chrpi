@@ -1,61 +1,171 @@
-<div class="post-card">
-    <div class="post-body">
+<style>
+    .chrpi-card {
+        background: white;
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
+        transition: transform 0.2s;
+        overflow: hidden;
+    }
 
-        <a href="{{ url_for('view_single_post', post_id=post.id) }}" class="text-decoration-none">
+    .chrpi-card:hover {
+        box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    }
 
-            {% if post.content %}
-                <p class="post-content-text">{{ post.content }}</p>
-            {% endif %}
+    .card-header-custom {
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        background-color: #fff;
+        border-bottom: 1px solid #f0f0f0;
+    }
 
-            {% if post.link %}
-                <p>
-                    <a href="{{ post.link }}" target="_blank" class="story-link">
-                        🔗 View External Story
-                    </a>
-                </p>
-            {% endif %}
+    .user-avatar-small {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 12px;
+    }
 
+    .post-meta {
+        line-height: 1.2;
+    }
+
+    .post-username {
+        font-weight: 700;
+        color: #333;
+        text-decoration: none;
+    }
+
+    .post-time {
+        font-size: 0.85rem;
+        color: #999;
+    }
+
+    .post-content {
+        padding: 1rem 1rem 0.5rem 1rem;
+        font-size: 1.05rem;
+        color: #222;
+        line-height: 1.5;
+    }
+
+    .post-image {
+        width: 100%;
+        height: auto;
+        display: block;
+        max-height: 500px;
+        object-fit: cover;
+        margin-top: 0.5rem;
+    }
+
+    .post-link-card {
+        display: block;
+        margin: 1rem;
+        border: 1px solid #eee;
+        border-radius: 12px;
+        overflow: hidden;
+        text-decoration: none;
+        color: #333;
+        background: #f9f9f9;
+    }
+
+    .post-link-card:hover {
+        background: #f1f1f1;
+        text-decoration: none;
+        color: #333;
+    }
+
+    .post-actions {
+        padding: 0.75rem 1rem;
+        border-top: 1px solid #f8f8f8;
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .reaction-btn {
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+    }
+
+    /* Style for unselected buttons */
+    .btn-reaction-outline {
+        background-color: #f8f9fa;
+        color: #555;
+        border-color: #eee;
+    }
+    .btn-reaction-outline:hover {
+        background-color: #e2e6ea;
+    }
+
+    /* Style for selected buttons (Active) */
+    .btn-reaction-active {
+        background-color: #fff3cd; /* Light yellow background */
+        color: #856404;
+        border-color: #ffeeba;
+        font-weight: 600;
+    }
+</style>
+
+<div class="chrpi-card">
+    <div class="card-header-custom">
+        <a href="{{ url_for('user_profile', username=post.username) }}">
+            <img src="{{ post.profile_image if post.profile_image else url_for('static', filename='default-profile.png') }}"
+                 alt="{{ post.username }}" class="user-avatar-small">
         </a>
-
-        {% if post.image %}
-            <img src="{{ post.image }}" class="post-image" alt="Post image">
-        {% endif %}
-
-        <div class="d-flex justify-content-between align-items-center mt-3">
-
-            <div class="d-flex align-items-center reaction-area">
-                {% set allowed_emojis = ['😊', '😂', '🥹', '🥰', '🤩', '🥳'] %}
-
-                {% for emoji in allowed_emojis %}
-
-                    {% set count = post.reaction_counts_dict.get(emoji, 0) %}
-
-                    <form action="{{ url_for('smile', post_id=post.id) }}" method="POST" style="display:inline-block; margin-right: 5px;">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                        <input type="hidden" name="reaction" value="{{ emoji }}"/>
-
-                        <button type="submit"
-                                class="btn btn-sm btn-smile
-                                       {% if post.user_reaction == emoji %}btn-smile-active{% endif %}"
-                                title="React with {{ emoji }}">
-                            {{ emoji }}
-                        </button>
-
-                        {% if count > 0 %}
-                            <div class="reaction-count-display text-center small fw-bold">
-                                {{ count }}
-                            </div>
-                        {% endif %}
-                    </form>
-                {% endfor %}
-
-                </div>
-
-            <div class="post-meta">
-                Posted by
-                <a href="{{ url_for('user_profile', username=post.username) }}">@{{ post.username }}</a><br>
-                {{ post.timestamp | datetime }}
+        <div class="post-meta">
+            <div>
+                <a href="{{ url_for('user_profile', username=post.username) }}" class="post-username">
+                    {{ post.username }}
+                </a>
             </div>
+            <div class="post-time">{{ post.timestamp|datetime }}</div>
         </div>
+    </div>
+
+    {% if post.content %}
+    <div class="post-content">
+        {{ post.content }}
+    </div>
+    {% endif %}
+
+    {% if post.image %}
+    <a href="{{ url_for('view_single_post', post_id=post.id) }}">
+        <img src="{{ post.image }}" alt="Post image" class="post-image">
+    </a>
+    {% endif %}
+
+    {% if post.link and not post.image %}
+    <a href="{{ post.link }}" target="_blank" class="post-link-card">
+        <div class="p-3">
+            <i class="fas fa-link text-muted mr-2"></i>
+            <span style="font-weight:500;">{{ post.link }}</span>
+        </div>
+    </a>
+    {% endif %}
+
+    <div class="post-actions">
+        {% for emoji in allowed_emojis %}
+        <form action="{{ url_for('smile', post_id=post.id) }}" method="POST" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="reaction" value="{{ emoji }}">
+
+            <button type="submit"
+                class="btn reaction-btn {{ 'btn-reaction-active' if post.user_reaction == emoji else 'btn-reaction-outline' }}">
+                <span>{{ emoji }}</span>
+                {% if post.reaction_counts_dict[emoji] > 0 %}
+                    <span>{{ post.reaction_counts_dict[emoji] }}</span>
+                {% endif %}
+            </button>
+        </form>
+        {% endfor %}
     </div>
 </div>

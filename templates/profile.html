@@ -3,6 +3,37 @@
 {% block title %}@{{ profile.username }}'s Profile{% endblock %}
 
 {% block content %}
+
+<style>
+    .profile-header {
+        max-width: 600px; /* Limits the width so it doesn't stretch too far */
+        margin: 0 auto;   /* Centers the box */
+        padding: 1.5rem;  /* Reduces padding (default is usually larger) */
+        text-align: center;
+    }
+
+    .profile-image-large {
+        width: 120px;     /* Smaller image size (was likely larger) */
+        height: 120px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 4px solid #fff;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+    }
+
+    .page-title {
+        font-size: 1.75rem; /* Slightly smaller font for the name */
+        margin-bottom: 0.5rem;
+    }
+
+    .profile-bio {
+        font-size: 1rem;
+        color: #666;
+        margin-bottom: 1.5rem;
+    }
+</style>
+
 <div class="container py-4">
     <div class="profile-header">
         <img src="{{ profile.profile_image if profile.profile_image else url_for('static', filename='default-profile.png') }}"
@@ -12,37 +43,36 @@
         <p class="profile-bio">{{ profile.bio if profile.bio else "A cheerful new chrpi user!" }}</p>
 
         {% if user %}
-
             {% if user.id != profile.id %}
                 <form method="POST" action="{{ url_for('follow', user_id=profile.id) if not is_following else url_for('unfollow', user_id=profile.id) }}" style="display:inline;">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-
-                    <button type="submit" class="btn {% if is_following %}btn-secondary{% else %}btn-primary{% endif %}">
+                    <button type="submit" class="btn {% if is_following %}btn-secondary{% else %}btn-primary{% endif %} btn-sm">
                         {% if is_following %}
                             Unfollow
                         {% else %}
-                            Follow {{ profile.username }}
+                            Follow
                         {% endif %}
                     </button>
                 </form>
             {% else %}
-                <a href="{{ url_for('edit_profile') }}" class="btn btn-secondary">
-                    Edit Your Profile
+                <a href="{{ url_for('edit_profile') }}" class="btn btn-outline-secondary btn-sm">
+                    Edit Profile
                 </a>
             {% endif %}
-
         {% endif %}
     </div>
 
     <hr>
 
-    <h2>{{ profile.username }}'s Posts</h2>
+    <h3 class="text-center mb-4">{{ profile.username }}'s Posts</h3>
 
     <div class="post-list">
         {% for post in posts %}
             {% include 'post_card_template.html' %}
         {% else %}
-            <p class="text-muted">No posts shared yet.</p>
+            <div class="text-center text-muted mt-5">
+                <p>No posts shared yet.</p>
+            </div>
         {% endfor %}
     </div>
 
