@@ -428,6 +428,25 @@ def create_post():
     flash("Your post has been shared!")
     return redirect(url_for('feed'))
 
+@app.route("/delete-post/<int:post_id>", methods=["POST"])
+def delete_post(post_id):
+    me = current_user()
+    if not me:
+        return redirect(url_for('login'))
+
+    db = get_db()
+    post = db.execute("SELECT user_id FROM posts WHERE id = ?", (post_id,)).fetchone()
+
+    if post and post["user_id"] == me["id"]:
+        db.execute("DELETE FROM post_smiles WHERE post_id = ?", (post_id,))
+        db.execute("DELETE FROM posts WHERE id = ?", (post_id,))
+        db.commit()
+        flash("Post deleted.")
+    else:
+        flash("You don't have permission to delete this.")
+
+    return redirect(get_safe_redirect(request.referrer))
+
 
 @app.route('/smile/<int:post_id>', methods=['POST'])
 def smile(post_id):
