@@ -6,7 +6,7 @@ from datetime import datetime
 from flask import Flask, render_template, request, redirect, session, g, flash, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from urllib.parse import urlparse, urljoin  # <--- FIXED IMPORT
+from urllib.parse import urlparse, urljoin
 from PIL import Image
 from textblob import TextBlob
 from flask_wtf.csrf import CSRFProtect
@@ -14,10 +14,10 @@ from dotenv import load_dotenv
 import requests
 from bs4 import BeautifulSoup
 
-# Load environment variables (like FLASK_SECRET_KEY)
+# Load environment variables
 load_dotenv()
 
-# --- Config ---
+# Config
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(APP_DIR, "static", "uploads")
 DB_PATH = os.path.join(APP_DIR, "chrpi.db")
@@ -32,32 +32,28 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 csrf = CSRFProtect(app)
 
 
-# --- Jinja Filter (NEW) ---
+ALLOWED_EMOJIS = ['😊', '😂', '🥹', '🥰', '🤩', '🥳']
+
+
+# Jinja filter
 def format_datetime(value, format='%m/%d/%y, %I:%M%p'):
     """Formats a datetime object or string into the 'MM/DD/YY, HH:MMam/pm' string format."""
     if value is None:
         return ""
 
-    # If value is a string from SQLite, convert it to a datetime object
     if isinstance(value, str):
         try:
-            # Common SQLite datetime format is YYYY-MM-DD HH:MM:SS
-            # We split by '.' to ignore milliseconds if they exist
             value = datetime.strptime(value.split('.')[0], '%Y-%m-%d %H:%M:%S')
         except ValueError:
-            return value  # Return original value if parsing fails
+            return value
 
-    # Format and convert am/pm to lowercase
     return value.strftime(format).replace(' 0', ' ').lower()
 
 
 app.jinja_env.filters['datetime'] = format_datetime
 
 
-# ---------------------------
-
-
-# --- DB helpers ---
+# DB Helpers
 def get_db():
     db = getattr(g, "_database", None)
     if db is None:
@@ -110,9 +106,7 @@ def init_db():
     );
     """)
 
-    # Post Smiles Table (Includes reaction_emoji update logic)
-    # Note: If running this after initial tables were created, you might need ALTER TABLE
-    # However, this CREATE IF NOT EXISTS handles the initial setup.
+    # Post Smiles Table
     db.execute("""
     CREATE TABLE IF NOT EXISTS post_smiles (
         user_id INTEGER,
@@ -124,7 +118,7 @@ def init_db():
     db.commit()
 
 
-# --- Auth & Utility helpers ---
+# Auth & Utility helpers
 def current_user():
     uid = session.get("user_id")
     if not uid:
@@ -170,7 +164,6 @@ def analyze_sentiment(text: str):
 
 
 def get_safe_redirect(target):
-    """Ensures we don't redirect users to external phishing sites."""
     if not target:
         return url_for('feed')
     target_url = urlparse(target)
@@ -180,27 +173,22 @@ def get_safe_redirect(target):
 
 
 def get_link_preview_image(url: str):
-    """Fetches the og:image URL from an external link's metadata."""
     if not url:
         return ""
 
     try:
-        # Use a user-agent to avoid being blocked by some sites
         headers = {'User-Agent': 'Mozilla/5.0'}
         response = requests.get(url, headers=headers, timeout=5)
-        response.raise_for_status()  # Raise exception for bad status codes
+        response.raise_for_status()
 
         soup = BeautifulSoup(response.content, 'html.parser')
 
-        # 1. Look for the og:image tag (standard for social media previews)
         og_image = soup.find("meta", property="og:image")
         if og_image and og_image.get("content"):
             image_url = og_image.get("content")
 
-            # CRITICAL: Ensure the URL is absolute before saving.
             return urljoin(url, image_url)
 
-        # 2. Fallback: Look for a standard favicon or first image
         favicon = soup.find("link", rel="icon")
         if favicon and favicon.get("href"):
             return urljoin(url, favicon.get("href"))
@@ -211,7 +199,7 @@ def get_link_preview_image(url: str):
     return ""
 
 
-# --- Routes ---
+# Routes
 @app.before_request
 def before_request():
     init_db()
@@ -358,7 +346,6 @@ def create_post():
         return redirect("/login")
 
     if request.method == "GET":
-        # NEW: Use the distinct template name 'post_form.html'
         return render_template("post_form.html", user=me)
 
     content = request.form.get("content", "").strip()
@@ -377,11 +364,9 @@ def create_post():
 
     image_path = ""
 
-    # 1. Check for user-uploaded image first
     if has_image:
         image_path = save_image(image_file)
 
-    # 2. If no user image AND a link is present, scrape the link for a preview image
     elif link:
         image_path = get_link_preview_image(link)
 
@@ -402,24 +387,18 @@ def smile(post_id):
     if not me:
         return redirect(url_for('login'))
 
-    # Get the reaction from the form submission (default to a smile)
     reaction = request.form.get("reaction", "😊")
 
     db = get_db()
 
-    # Check if the user has already reacted to this post
     existing = db.execute("SELECT 1 FROM post_smiles WHERE user_id = ? AND post_id = ?",
                           (me["id"], post_id)).fetchone()
 
-    # Define a set of allowed emojis (UPDATED)
-    ALLOWED_EMOJIS = ['😊', '😂', '🥹', '🥰', '🤩', '🥳']
 
     if reaction not in ALLOWED_EMOJIS:
-        # Default to the standard smile if an invalid emoji is sent
         reaction = "😊"
 
     if not existing:
-        # If no existing smile, insert the new reaction and increment total smiles
         db.execute("INSERT INTO post_smiles (user_id, post_id, reaction_emoji) VALUES (?, ?, ?)",
                    (me["id"], post_id, reaction))
         db.execute("UPDATE posts SET smiles = smiles + 1 WHERE id = ?", (post_id,))
@@ -463,7 +442,25 @@ def feed():
         ORDER BY posts.timestamp DESC
     """, (me["id"], me["id"])).fetchall()
 
-    return render_template("feed.html", posts=posts, user=me, title="Following Feed")
+    processed_posts = []
+    for post in posts:
+        post_dict = dict(post)
+
+        reaction_counts = {emoji: 0 for emoji in ALLOWED_EMOJIS}
+
+        if post_dict['top_reactions']:
+            for item in post_dict['top_reactions'].split(','):
+                try:
+                    emoji, count = item.split(':')
+                    reaction_counts[emoji] = int(count)
+                except ValueError:
+                    continue
+
+        post_dict['reaction_counts_dict'] = reaction_counts
+        processed_posts.append(post_dict)
+
+    return render_template("feed.html", posts=processed_posts, user=me, title="Following Feed",
+                           allowed_emojis=ALLOWED_EMOJIS)
 
 
 @app.route("/top")
@@ -494,7 +491,25 @@ def top():
         LIMIT 100
     """, (user_id,)).fetchall()
 
-    return render_template("feed.html", posts=posts, user=user, title="Top Smiled Posts")
+    processed_posts = []
+    for post in posts:
+        post_dict = dict(post)
+
+        reaction_counts = {emoji: 0 for emoji in ALLOWED_EMOJIS}
+
+        if post_dict['top_reactions']:
+            for item in post_dict['top_reactions'].split(','):
+                try:
+                    emoji, count = item.split(':')
+                    reaction_counts[emoji] = int(count)
+                except ValueError:
+                    continue
+
+        post_dict['reaction_counts_dict'] = reaction_counts
+        processed_posts.append(post_dict)
+
+    return render_template("feed.html", posts=processed_posts, user=user, title="Top Smiled Posts",
+                           allowed_emojis=ALLOWED_EMOJIS)
 
 
 @app.route('/view/<int:post_id>')
@@ -526,19 +541,39 @@ def view_single_post(post_id):
     if not post:
         return "Post not found", 404
 
-    return render_template('post_view.html', post=post, user=me, title=f"Post by {post['username']}")
+    posts_to_process = [post]
+    processed_posts = []
+
+    for post_row in posts_to_process:
+        post_dict = dict(post_row)
+
+        reaction_counts = {emoji: 0 for emoji in ALLOWED_EMOJIS}
+
+        if post_dict['top_reactions']:
+            for item in post_dict['top_reactions'].split(','):
+                try:
+                    emoji, count = item.split(':')
+                    reaction_counts[emoji] = int(count)
+                except ValueError:
+                    continue
+
+        post_dict['reaction_counts_dict'] = reaction_counts
+        processed_posts.append(post_dict)
+
+    post_data = processed_posts[0]
+
+    return render_template('post_view.html', post=post_data, user=me, title=f"Post by {post_data['username']}",
+                           allowed_emojis=ALLOWED_EMOJIS)
 
 
-# --- Error Handlers ---
+# Error Handlers
 @app.errorhandler(404)
 def page_not_found(e):
-    # Renders a 404.html template and sends a 404 HTTP status code
     return render_template('404.html'), 404
 
 
 @app.errorhandler(500)
 def internal_server_error(e):
-    # Renders a 500.html template and sends a 500 HTTP status code
     return render_template('500.html'), 500
 
 
