@@ -50,6 +50,24 @@ body {
     /* Add a subtle shadow for depth */
     text-shadow: 1px 1px 0 var(--tropical-teal);
 }
+.chrpi-logo {
+  height: 100px;
+  width: auto;
+  max-width: 100%;
+}
+.chrpi-logo {
+  transition: transform 0.2s ease;
+}
+
+.chrpi-logo:hover {
+  transform: translateY(-2px);
+}
+@media (max-width: 576px) {
+  .chrpi-logo {
+    height: 60px;
+  }
+}
+
 
 /* ---------------------------------------------------
    POST CARDS (The focus area)

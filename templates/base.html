@@ -9,32 +9,45 @@
   <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
+  <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}">
+
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
 
-  <header class="navbar-custom mb-5">
-    <div class="container text-center">
-      <a href="{{ url_for('index') }}" class="text-decoration-none">
-        <h1 class="display-5 fw-bold mb-3">chrpi</h1>
-      </a>
+<header class="navbar-custom mb-5">
+  <div class="container text-center">
 
-      <nav class="p-3">
-        {% if user %}
-          <a href="{{ url_for('feed') }}" class="mx-2">Feed</a>
-          <a href="{{ url_for('top') }}" class="mx-2">Top Smiles</a>
-          <a href="{{ url_for('create_post') }}" class="mx-2">New Post</a>
-          <a href="{{ url_for('user_profile', username=user.username) }}" class="mx-2">My Profile</a>
-          <a href="{{ url_for('edit_profile') }}" class="mx-2">Edit Profile</a>
-          <a href="{{ url_for('logout') }}" class="mx-2">Logout</a>
-        {% else %}
-          <a href="{{ url_for('login') }}" class="mx-2">Login</a>
-          <a href="{{ url_for('register') }}" class="mx-2">Register</a>
-        {% endif %}
-      </nav>
-    </div>
-  </header>
+    <!-- Logo only -->
+    <a href="{{ url_for('index') }}"
+       class="text-decoration-none d-inline-block mb-3">
+
+      <img
+        src="{{ url_for('static', filename='images/chrpilogo.png') }}"
+        alt="chrpi logo"
+        class="chrpi-logo"
+      >
+    </a>
+
+    <!-- Navigation -->
+    <nav class="p-3">
+      {% if user %}
+        <a href="{{ url_for('feed') }}" class="mx-2">Feed</a>
+        <a href="{{ url_for('top') }}" class="mx-2">Top Smiles</a>
+        <a href="{{ url_for('create_post') }}" class="mx-2">New Post</a>
+        <a href="{{ url_for('user_profile', username=user.username) }}" class="mx-2">My Profile</a>
+        <a href="{{ url_for('edit_profile') }}" class="mx-2">Edit Profile</a>
+        <a href="{{ url_for('logout') }}" class="mx-2">Logout</a>
+      {% else %}
+        <a href="{{ url_for('login') }}" class="mx-2">Login</a>
+        <a href="{{ url_for('register') }}" class="mx-2">Register</a>
+      {% endif %}
+    </nav>
+
+  </div>
+</header>
+
 
   <div class="container mb-4">
     {% with messages = get_flashed_messages() %}
