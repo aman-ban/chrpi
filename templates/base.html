@@ -16,12 +16,12 @@
 
 <body>
 
-<header class="navbar-custom mb-5">
+<header class="navbar-custom mb-2">
   <div class="container text-center">
 
     <!-- Logo only -->
     <a href="{{ url_for('index') }}"
-       class="text-decoration-none d-inline-block mb-3">
+       class="text-decoration-none d-inline-block">
 
       <img
         src="{{ url_for('static', filename='images/chrpilogo.png') }}"
@@ -31,7 +31,7 @@
     </a>
 
     <!-- Navigation -->
-    <nav class="p-3">
+    <nav class="pt-1">
       {% if user %}
         <a href="{{ url_for('feed') }}" class="mx-2">Feed</a>
         <a href="{{ url_for('top') }}" class="mx-2">Top Smiles</a>

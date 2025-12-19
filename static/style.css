@@ -25,40 +25,37 @@ body {
     padding: 0;
 }
 
-/* container alignment override */
 .container {
     max-width: 800px;
 }
 
-/* Enhanced Utility Class: Visually separates content */
 .section-divider {
     border: none;
     height: 1px;
-    background-color: var(--soft-apricot); /* Use soft color for gentle separation */
-    margin: 2rem 0;
+    background-color: var(--soft-apricot);
+    margin: 0;
 }
 
 /* ---------------------------------------------------
    HEADERS / TITLES
 --------------------------------------------------- */
 .page-title {
-    font-size: 2.5rem; /* Slightly larger */
-    font-weight: 900;  /* Bolder */
+    font-size: 2.5rem;
+    font-weight: 900;
     margin-bottom: 1.5rem;
     text-align: center;
     color: var(--cerulean);
-    /* Add a subtle shadow for depth */
     text-shadow: 1px 1px 0 var(--tropical-teal);
 }
 .chrpi-logo {
-  height: 100px;
+  display: block;
+  height: 200px;
   width: auto;
   max-width: 100%;
 }
 .chrpi-logo {
   transition: transform 0.2s ease;
 }
-
 .chrpi-logo:hover {
   transform: translateY(-2px);
 }
@@ -110,12 +107,11 @@ body {
     width: 100%;
     display: block;
     object-fit: cover;
-    /* Add rounded corners to the image itself */
     border-radius: 16px 16px 0 0;
 }
 
 .post-image {
-    max-height: 300px; /* Adjusted slightly */
+    max-height: 300px;
 }
 
 .post-image-large {
@@ -123,19 +119,18 @@ body {
 }
 
 .post-body {
-    padding: 1.5rem; /* Increased padding */
+    padding: 1.5rem;
 }
 
 .post-text-link {
     display: inline-block;
-    font-size: 1.3rem; /* Slightly larger text */
+    font-size: 1.3rem;
     font-weight: 700;
     color: var(--cerulean);
     text-decoration: none;
     margin-bottom: 0.5rem;
 }
 
-/* Post content text */
 .post-content-text {
     font-size: 1.1rem;
     line-height: 1.6;
@@ -145,7 +140,7 @@ body {
     font-size: 1rem;
     text-decoration: none;
     color: var(--vibrant-coral);
-    font-weight: 600; /* Made link text bolder */
+    font-weight: 600;
 }
 
 .story-link:hover {
@@ -157,24 +152,24 @@ body {
    META TEXT (Timestamp, Username)
 --------------------------------------------------- */
 .post-meta {
-    font-size: 0.95rem; /* Slightly larger */
+    font-size: 0.95rem;
     color: var(--text-soft);
     margin-top: 0.75rem;
-    /* Use a light yellow background strip for the metadata */
     padding: 0.5rem 0.75rem;
     background-color: var(--light-yellow);
     border-radius: 6px;
-    display: inline-block; /* Only spans the content width */
+    display: inline-block;
 }
 
 /* ---------------------------------------------------
    NAVBAR / LOGO / LINKS
 --------------------------------------------------- */
 .navbar-custom {
-    /* Use the bright tropical teal for the main navbar */
     background: var(--tropical-teal);
     color: white;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    padding-top: 4px;
+    padding-bottom: 2px;
 }
 
 .navbar-custom a {
