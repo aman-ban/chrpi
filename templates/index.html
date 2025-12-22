@@ -2,14 +2,14 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="feed-container">
 
     {% if posts %}
         <div class="post-list">
             {% for post in posts %}
             <div class="post-card">
 
-                <a href="{{ url_for('post', post_id=post['id']) }}">
+                <a href="{{ url_for('post', post_id=post['id']) }}" class="post-image-link">
                     {% if post['image_path'] %}
                         <img src="{{ url_for('static', filename='uploads/' ~ post['image_path']) }}"
                              class="post-image"
@@ -24,19 +24,21 @@
                     </a>
 
                     {% if post['link'] %}
-                    <div>
-                        <a href="{{ post['link'] }}" class="story-link" target="_blank">
-                            {{ post['link'] }}
+                    <div class="post-link-container">
+                        <a href="{{ post['link'] }}" class="story-link" target="_blank" rel="noopener noreferrer">
+                            🔗 {{ post['link'] }}
                         </a>
                     </div>
                     {% endif %}
 
                     <div class="post-meta">
-                        ⭐ {{ post['smiles'] }}
-                        — by <a href="{{ url_for('profile', user_id=post['user_id']) }}">
-                            {{ post['username'] }}
-                          </a>
-                        — {{ post['created_at'] }}
+                        <span class="post-reactions">⭐ {{ post['smiles'] }}</span>
+                        <span class="post-divider">•</span>
+                        <span class="post-author">
+                            by <a href="{{ url_for('profile', user_id=post['user_id']) }}">{{ post['username'] }}</a>
+                        </span>
+                        <span class="post-divider">•</span>
+                        <span class="post-time">{{ post['created_at'] }}</span>
                     </div>
                 </div>
 
@@ -44,7 +46,14 @@
             {% endfor %}
         </div>
     {% else %}
-        <p class="text-center">No posts yet!</p>
+        <div class="empty-state">
+            <div class="empty-state-emoji">📭</div>
+            <h3>No posts yet!</h3>
+            <p>Be the first to share something uplifting.</p>
+            <a href="{{ url_for('create_post') }}" class="btn btn-primary">
+                Share Your Story
+            </a>
+        </div>
     {% endif %}
 
 </div>

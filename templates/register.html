@@ -1,31 +1,55 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2 class="text-center mb-4">Create an Account</h2>
+<div class="form-page-container">
 
-<div class="col-md-6 mx-auto p-4 bg-light-glass">
-  <form method="POST">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-    <div class="mb-3">
-      <label class="form-label">Username</label>
-      <input class="form-control" name="username" required>
-    </div>
+  <div class="form-header">
+    <h2 class="form-title">Create an Account</h2>
+    <p class="form-subtitle">Join the chrpi community</p>
+  </div>
 
-    <div class="mb-3">
-      <label class="form-label">Password</label>
-      <input class="form-control" type="password" name="password" required>
-    </div>
+  <div class="form-card">
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
-    <div class="mb-3">
-      <label class="form-label">Solve to Prove You're Human</label>
-      <div class="input-group">
-        <span class="input-group-text">{{ a }} + {{ b }} =</span>
-        <input class="form-control" name="captcha" required>
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input class="form-control"
+               name="username"
+               type="text"
+               placeholder="Choose a username"
+               required>
       </div>
-    </div>
 
-    <button class="btn btn-teal w-100">Register</button>
-  </form>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-control"
+               type="password"
+               name="password"
+               placeholder="Create a secure password"
+               required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Prove You're Human</label>
+        <div class="captcha-container">
+          <span class="captcha-question">{{ a }} + {{ b }} =</span>
+          <input class="form-control captcha-input"
+                 name="captcha"
+                 type="number"
+                 placeholder="?"
+                 required>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-block" type="submit">Create Account</button>
+    </form>
+
+    <div class="form-footer">
+      <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+    </div>
+  </div>
+
 </div>
 
 {% endblock %}

@@ -3,14 +3,18 @@
 {% block title %}Post by {{ post.username }}{% endblock %}
 
 {% block content %}
-<div class="container py-4 post-page">
-    
-    {% if post is defined and post %}
-    
-    <h1 class="page-title">Post by @{{ post.username }}</h1>
+<div class="single-post-container">
 
-    <div class="post-card single-post">
-        
+    {% if post is defined and post %}
+
+    <div class="single-post-header">
+        <a href="{{ url_for('user_profile', username=post.username) }}" class="back-to-profile">
+            ← Back to @{{ post.username }}'s profile
+        </a>
+    </div>
+
+    <div class="post-card single-post-card">
+
         {% if post.image %}
             <img src="{{ post.image }}"
                  class="post-image-large"
@@ -20,46 +24,60 @@
         <div class="post-body">
 
             {% if post.content %}
-                <p class="post-content-text">{{ post.content }}</p>
+                <div class="single-post-content">{{ post.content }}</div>
             {% endif %}
 
             {% if post.link %}
-            <p>
-                <a href="{{ post.link }}" class="story-link" target="_blank">
+            <div class="single-post-link">
+                <a href="{{ post.link }}" class="story-link" target="_blank" rel="noopener noreferrer">
                     🔗 Read External Source
                 </a>
-            </p>
+            </div>
             {% endif %}
 
-            <hr class="section-divider">
+            <div class="section-divider"></div>
 
-            <div class="d-flex justify-content-between align-items-center">
-                
-                <div class="post-meta">
-                    Posted by 
-                    <a href="{{ url_for('user_profile', username=post.username) }}">@{{ post.username }}</a>
-                    — {{ post.timestamp }}
+            <div class="single-post-footer">
+
+                <div class="post-meta-single">
+                    <span class="post-author-label">Posted by</span>
+                    <a href="{{ url_for('user_profile', username=post.username) }}" class="post-author-link">
+                        @{{ post.username }}
+                    </a>
+                    <span class="post-divider">•</span>
+                    <span class="post-timestamp">{{ post.timestamp }}</span>
                 </div>
-                
-                <form action="{{ url_for('smile', post_id=post.id) }}" method="POST" style="display:inline;">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    
-                    <button type="submit" class="btn btn-smile {% if post.has_smiled %}btn-smile-active{% endif %}">
-                        {% if post.has_smiled %}
-                            😊 Smiled ({{ post.smiles }})
-                        {% else %}
-                            😐 Smile? ({{ post.smiles }})
-                        {% endif %}
-                    </button>
-                </form>
+
+                <div class="single-post-reactions">
+                    {% for emoji in allowed_emojis %}
+                    <form action="{{ url_for('smile', post_id=post.id) }}" method="POST" class="reaction-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="reaction" value="{{ emoji }}">
+
+                        <button type="submit"
+                                class="reaction-btn {{ 'reaction-btn-active' if post.user_reaction == emoji else '' }}">
+                            <span class="reaction-emoji">{{ emoji }}</span>
+                            {% if post.reaction_counts_dict[emoji] > 0 %}
+                                <span class="reaction-count">{{ post.reaction_counts_dict[emoji] }}</span>
+                            {% endif %}
+                        </button>
+                    </form>
+                    {% endfor %}
+                </div>
             </div>
 
         </div>
     </div>
 
     {% else %}
-        <h2 class="page-title text-danger">Post Not Found</h2>
-        <p class="text-center text-muted">Sorry, we couldn't find that particular post.</p>
+        <div class="empty-state">
+            <div class="empty-state-emoji">😕</div>
+            <h3>Post Not Found</h3>
+            <p>Sorry, we couldn't find that particular post.</p>
+            <a href="{{ url_for('feed') }}" class="btn btn-primary">
+                Return to Feed
+            </a>
+        </div>
     {% endif %}
 
 </div>

@@ -4,77 +4,71 @@
 
 {% block content %}
 
-<style>
-    .profile-header {
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 1.5rem;
-        text-align: center;
-    }
+<div class="profile-page-container">
 
-    .profile-image-large {
-        width: 120px;
-        height: 120px;
-        object-fit: cover;
-        border-radius: 50%;
-        border: 4px solid #fff;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        margin-bottom: 1rem;
-    }
+    <div class="profile-card">
+        <div class="profile-avatar-section">
+            <img src="{{ profile.profile_image if profile.profile_image else url_for('static', filename='default-profile.png') }}"
+                 alt="{{ profile.username }}"
+                 class="profile-avatar-large">
+        </div>
 
-    .page-title {
-        font-size: 1.75rem;
-        margin-bottom: 0.5rem;
-    }
+        <h1 class="profile-name">@{{ profile.username }}</h1>
+        <p class="profile-bio-text">{{ profile.bio if profile.bio else "A cheerful new chrpi user!" }}</p>
 
-    .profile-bio {
-        font-size: 1rem;
-        color: #666;
-        margin-bottom: 1.5rem;
-    }
-</style>
-
-<div class="container py-4">
-    <div class="profile-header">
-        <img src="{{ profile.profile_image if profile.profile_image else url_for('static', filename='default-profile.png') }}"
-             alt="{{ profile.username }}" class="profile-image-large">
-
-        <h1 class="page-title">@{{ profile.username }}</h1>
-        <p class="profile-bio">{{ profile.bio if profile.bio else "A cheerful new chrpi user!" }}</p>
-
-        {% if user %}
-            {% if user.id != profile.id %}
-                <form method="POST" action="{{ url_for('follow', user_id=profile.id) if not is_following else url_for('unfollow', user_id=profile.id) }}" style="display:inline;">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <button type="submit" class="btn {% if is_following %}btn-secondary{% else %}btn-primary{% endif %} btn-sm">
-                        {% if is_following %}
-                            Unfollow
-                        {% else %}
-                            Follow
-                        {% endif %}
-                    </button>
-                </form>
-            {% else %}
-                <a href="{{ url_for('edit_profile') }}" class="btn btn-outline-secondary btn-sm">
-                    Edit Profile
-                </a>
+        <div class="profile-actions">
+            {% if user %}
+                {% if user.id != profile.id %}
+                    <form method="POST"
+                          action="{{ url_for('follow', user_id=profile.id) if not is_following else url_for('unfollow', user_id=profile.id) }}"
+                          class="profile-follow-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" class="btn {% if is_following %}btn-secondary{% else %}btn-primary{% endif %}">
+                            {% if is_following %}
+                                ✓ Following
+                            {% else %}
+                                + Follow
+                            {% endif %}
+                        </button>
+                    </form>
+                {% else %}
+                    <a href="{{ url_for('edit_profile') }}" class="btn btn-secondary">
+                        ✏️ Edit Profile
+                    </a>
+                {% endif %}
             {% endif %}
-        {% endif %}
+        </div>
     </div>
 
-    <hr>
+    <div class="profile-posts-section">
+        <h3 class="profile-posts-title">{{ profile.username }}'s Posts</h3>
 
-    <h3 class="text-center mb-4">{{ profile.username }}'s Posts</h3>
-
-    <div class="post-list">
-        {% for post in posts %}
-            {% include 'post_card_template.html' %}
-        {% else %}
-            <div class="text-center text-muted mt-5">
-                <p>No posts shared yet.</p>
-            </div>
-        {% endfor %}
+        <div class="post-list">
+            {% if posts %}
+                {% for post in posts %}
+                    {% include 'post_card_template.html' %}
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-emoji">📝</div>
+                    <h3>No posts yet</h3>
+                    <p>
+                        {% if user and user.id == profile.id %}
+                            Share your first uplifting story!
+                        {% else %}
+                            {{ profile.username }} hasn't shared anything yet.
+                        {% endif %}
+                    </p>
+                    {% if user and user.id == profile.id %}
+                        <a href="{{ url_for('create_post') }}" class="btn btn-primary">
+                            Create Your First Post
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
     </div>
 
 </div>
+
 {% endblock %}

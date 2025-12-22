@@ -3,49 +3,67 @@
 {% block title %}Share a New Smile{% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="form-page-container" style="max-width: 700px;">
 
-    <h1 class="page-title">Share a New Smile! ☀️</h1>
+    <div class="form-header">
+        <h1 class="form-title">Share a New Smile! ☀️</h1>
+        <p class="form-subtitle">Spread positivity and brighten someone's day</p>
+    </div>
 
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <div class="alert alert-info mb-4" role="alert">
-                {% for message in messages %}
-                    <p class="mb-0">{{ message }}</p>
-                {% endfor %}
+    <div class="form-card">
+        <form method="POST" action="{{ url_for('create_post') }}" enctype="multipart/form-data">
+
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+            <div class="form-group">
+                <label for="content" class="form-label">Your Uplifting Story or Thought</label>
+                <textarea class="form-control"
+                          id="content"
+                          name="content"
+                          rows="6"
+                          placeholder="What wonderful thing happened today? Share something positive and uplifting..."></textarea>
+                <small class="form-helper-text">Share what made you smile today ✨</small>
             </div>
-        {% endif %}
-    {% endwith %}
 
-    <div class="post-card">
-        <div class="post-body">
+            <div class="form-group">
+                <label for="link" class="form-label">Related Link <span class="optional-badge">Optional</span></label>
+                <input type="url"
+                       class="form-control"
+                       id="link"
+                       name="link"
+                       placeholder="https://example.com">
+                <small class="form-helper-text">Add a link to a positive article, video, or website</small>
+            </div>
 
-            <form method="POST" action="{{ url_for('create_post') }}" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="image" class="form-label">Upload an Image <span class="optional-badge">Optional</span></label>
+                <input type="file"
+                       class="form-control file-input"
+                       id="image"
+                       name="image"
+                       accept="image/*">
+                <small class="form-helper-text">Supported formats: PNG, JPG, JPEG, or GIF</small>
+            </div>
 
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <button type="submit" class="btn btn-primary btn-block btn-post-submit">
+                ☀️ Post The Cheer!
+            </button>
+        </form>
 
-                <div class="mb-4">
-                    <label for="content" class="form-label fw-bold">Your Uplifting Story or Thought</label>
-                    <textarea class="form-control" id="content" name="content" rows="6"
-                              placeholder="What wonderful thing happened today? Share only positive, uplifting content."></textarea>
-                </div>
-
-                <div class="mb-4">
-                    <label for="link" class="form-label fw-bold">Related Link (Optional)</label>
-                    <input type="url" class="form-control" id="link" name="link"
-                           placeholder="Paste a link to a positive article, video, etc. (e.g., https://example.com)">
-                </div>
-
-                <div class="mb-4">
-                    <label for="image" class="form-label fw-bold">Upload an Image (Optional)</label>
-                    <input type="file" class="form-control" id="image" name="image" accept="image/*">
-                    <small class="form-text text-muted">Allowed formats: PNG, JPG, JPEG, or GIF.</small>
-                </div>
-
-                <button type="submit" class="btn btn-primary w-100 mt-3">Post The Cheer!</button>
-            </form>
-
+        <div class="form-footer">
+            <p><a href="{{ url_for('feed') }}">Cancel and return to feed</a></p>
         </div>
     </div>
+
+    <div class="post-guidelines">
+        <h4 class="guidelines-title">📋 Posting Guidelines</h4>
+        <ul class="guidelines-list">
+            <li>Share only positive, uplifting content</li>
+            <li>Be kind and respectful to everyone</li>
+            <li>Celebrate the good things in life</li>
+            <li>Spread joy and encouragement</li>
+        </ul>
+    </div>
+
 </div>
 {% endblock %}

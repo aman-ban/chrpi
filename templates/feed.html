@@ -3,18 +3,34 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<h1 class="page-title">{{ title }}</h1>
+<div class="feed-container">
 
-<div class="post-list">
-    {% if not posts %}
-        <div class="text-center p-5">
-            <p class="fs-4 text-muted">Your feed is quiet! Try following some users or check the Top Posts page.</p>
-            <a href="{{ url_for('top') }}" class="btn btn-primary">Go to Top Posts</a>
-        </div>
-    {% endif %}
+    <div class="feed-header">
+        <h1 class="page-title">{{ title }}</h1>
+        <p class="page-subtitle">See what's making your network smile</p>
+    </div>
 
-    {% for post in posts %}
-        {% include 'post_card_template.html' %}
-    {% endfor %}
+    <div class="post-list">
+        {% if posts %}
+            {% for post in posts %}
+                {% include 'post_card_template.html' %}
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state-emoji">🌱</div>
+                <h3>Your feed is quiet!</h3>
+                <p>Follow some users to see their uplifting posts here, or explore the Top Posts to discover great content.</p>
+                <div class="empty-state-actions">
+                    <a href="{{ url_for('top') }}" class="btn btn-primary">
+                        Explore Top Posts
+                    </a>
+                    <a href="{{ url_for('create_post') }}" class="btn btn-secondary">
+                        Share Something Positive
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
 </div>
 {% endblock %}
