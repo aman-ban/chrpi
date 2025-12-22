@@ -540,7 +540,7 @@ def top():
     filter_emoji = request.args.get('filter', 'all')
 
     # Validate the filter
-    if filter_emoji not in ['all'] + ALLOWED_EMOJIS:
+    if filter_emoji not in ['all', 'combo'] + ALLOWED_EMOJIS:
         filter_emoji = 'all'
 
     # Base query that gets all post data
@@ -563,6 +563,33 @@ def top():
             FROM posts
             JOIN users ON posts.user_id = users.id
             ORDER BY posts.smiles DESC, posts.timestamp DESC
+            LIMIT 100
+        """, (user_id,)).fetchall()
+    elif filter_emoji == 'combo':
+        # Combo filter - posts with 3+ different emoji types and high engagement
+        posts = db.execute("""
+            SELECT 
+                posts.*, 
+                users.username, 
+                users.profile_image,
+                (SELECT reaction_emoji FROM post_smiles WHERE post_smiles.post_id = posts.id AND post_smiles.user_id = ?) as user_reaction,
+                (SELECT GROUP_CONCAT(reaction_emoji || ':' || reaction_count) 
+                 FROM (SELECT reaction_emoji, COUNT(*) as reaction_count 
+                       FROM post_smiles 
+                       WHERE post_id = posts.id 
+                       GROUP BY reaction_emoji 
+                       ORDER BY reaction_count DESC 
+                       LIMIT 3)
+                ) as top_reactions,
+                (SELECT COUNT(DISTINCT reaction_emoji) FROM post_smiles WHERE post_id = posts.id) as emoji_diversity
+            FROM posts
+            JOIN users ON posts.user_id = users.id
+            WHERE posts.id IN (
+                SELECT post_id FROM post_smiles 
+                GROUP BY post_id 
+                HAVING COUNT(DISTINCT reaction_emoji) >= 3
+            )
+            ORDER BY emoji_diversity DESC, posts.smiles DESC, posts.timestamp DESC
             LIMIT 100
         """, (user_id,)).fetchall()
     else:
@@ -607,6 +634,40 @@ def top():
         post_dict['reaction_counts_dict'] = reaction_counts
         processed_posts.append(post_dict)
 
+    # Calculate Emoji Leaderboard (trending emojis across all posts)
+    emoji_stats = db.execute("""
+        SELECT reaction_emoji, COUNT(*) as count
+        FROM post_smiles
+        WHERE post_id IN (
+            SELECT id FROM posts 
+            WHERE timestamp > datetime('now', '-7 days')
+        )
+        GROUP BY reaction_emoji
+        ORDER BY count DESC
+    """).fetchall()
+
+    leaderboard = [{'emoji': row['reaction_emoji'], 'count': row['count']} for row in emoji_stats]
+
+    # Personal Stats (if user is logged in)
+    personal_stats = None
+    if user:
+        user_emoji_stats = db.execute("""
+            SELECT reaction_emoji, COUNT(*) as count
+            FROM post_smiles
+            WHERE user_id = ?
+            GROUP BY reaction_emoji
+            ORDER BY count DESC
+        """, (user_id,)).fetchall()
+
+        total_reactions = sum(row['count'] for row in user_emoji_stats)
+        favorite_emoji = user_emoji_stats[0]['reaction_emoji'] if user_emoji_stats else None
+
+        personal_stats = {
+            'total_reactions': total_reactions,
+            'favorite_emoji': favorite_emoji,
+            'emoji_breakdown': [{'emoji': row['reaction_emoji'], 'count': row['count']} for row in user_emoji_stats]
+        }
+
     # Define fun categories for each emoji
     emoji_categories = {
         '😊': {'name': 'Pure Joy', 'description': 'Posts that warm the heart'},
@@ -617,13 +678,21 @@ def top():
         '🥳': {'name': 'Celebration Central', 'description': 'Victories worth celebrating'}
     }
 
-    current_category = emoji_categories.get(filter_emoji, {
-        'name': 'All Top Posts',
-        'description': 'The most uplifting stories from our community'
-    }) if filter_emoji != 'all' else {
-        'name': 'All Top Posts',
-        'description': 'The most uplifting stories from our community'
-    }
+    if filter_emoji == 'combo':
+        current_category = {
+            'name': 'Universally Loved',
+            'description': 'Posts that sparked joy in all kinds of ways'
+        }
+    elif filter_emoji == 'all':
+        current_category = {
+            'name': 'All Top Posts',
+            'description': 'The most uplifting stories from our community'
+        }
+    else:
+        current_category = emoji_categories.get(filter_emoji, {
+            'name': 'All Top Posts',
+            'description': 'The most uplifting stories from our community'
+        })
 
     return render_template("top.html",
                            posts=processed_posts,
@@ -632,7 +701,9 @@ def top():
                            allowed_emojis=ALLOWED_EMOJIS,
                            filter_emoji=filter_emoji,
                            emoji_categories=emoji_categories,
-                           current_category=current_category)
+                           current_category=current_category,
+                           leaderboard=leaderboard,
+                           personal_stats=personal_stats)
 
 @app.route('/view/<int:post_id>')
 def view_single_post(post_id):

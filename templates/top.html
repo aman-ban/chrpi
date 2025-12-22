@@ -1,88 +1,197 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container" style="max-width: 800px; margin: 2rem auto; padding: 0 1rem;">
+<div class="container" style="max-width: 1200px; margin: 2rem auto; padding: 0 1rem;">
 
-    <!-- Header Section -->
-    <div style="text-align: center; margin-bottom: 2rem;">
-        <h1 style="font-size: 2.5rem; color: #333; margin-bottom: 0.5rem;">
-            {{ current_category.name }}
-        </h1>
-        <p style="color: #666; font-size: 1.1rem; margin-bottom: 2rem;">
-            {{ current_category.description }}
-        </p>
-    </div>
+    <div style="display: grid; grid-template-columns: 1fr 250px; gap: 1.5rem; align-items: start;">
 
-    <!-- Emoji Filter Tabs -->
-    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-bottom: 2rem; padding: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <!-- Main Content Column -->
+        <div>
+            <!-- Header Section -->
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h1 style="font-size: 2.5rem; color: #333; margin-bottom: 0.5rem;">
+                    {{ current_category.name }}
+                </h1>
+                <p style="color: #666; font-size: 1.1rem; margin-bottom: 2rem;">
+                    {{ current_category.description }}
+                </p>
+            </div>
 
-        <!-- All Posts Tab -->
-        <a href="{{ url_for('top', filter='all') }}"
-           style="text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 25px; font-weight: 600; transition: all 0.3s;
-                  {% if filter_emoji == 'all' %}
-                  background: white; color: #667eea; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-                  {% else %}
-                  background: rgba(255,255,255,0.2); color: white; border: 2px solid rgba(255,255,255,0.3);
-                  {% endif %}">
-            ✨ All
-        </a>
+            <!-- Emoji Filter Tabs -->
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-bottom: 2rem; padding: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
 
-        <!-- Individual Emoji Tabs -->
-        {% for emoji in allowed_emojis %}
-        <a href="{{ url_for('top', filter=emoji) }}"
-           style="text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 25px; font-size: 1.5rem; transition: all 0.3s;
-                  {% if filter_emoji == emoji %}
-                  background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.2); transform: scale(1.1);
-                  {% else %}
-                  background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3);
-                  {% endif %}">
-            {{ emoji }}
-        </a>
-        {% endfor %}
-    </div>
+                <!-- All Posts Tab -->
+                <a href="{{ url_for('top', filter='all') }}"
+                   style="text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 25px; font-weight: 600; transition: all 0.3s;
+                          {% if filter_emoji == 'all' %}
+                          background: white; color: #667eea; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                          {% else %}
+                          background: rgba(255,255,255,0.2); color: white; border: 2px solid rgba(255,255,255,0.3);
+                          {% endif %}">
+                    ✨ All
+                </a>
 
-    <!-- Fun Stats Bar (if filtered by specific emoji) -->
-    {% if filter_emoji != 'all' and posts|length > 0 %}
-    <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 1rem; border-radius: 10px; text-align: center; margin-bottom: 2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        <p style="margin: 0; font-size: 1.1rem; font-weight: 600;">
-            🎯 Found {{ posts|length }} post{% if posts|length != 1 %}s{% endif %} that made people feel {{ filter_emoji }}
-        </p>
-    </div>
-    {% endif %}
+                <!-- Combo Tab -->
+                <a href="{{ url_for('top', filter='combo') }}"
+                   style="text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 25px; font-weight: 600; transition: all 0.3s;
+                          {% if filter_emoji == 'combo' %}
+                          background: white; color: #667eea; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                          {% else %}
+                          background: rgba(255,255,255,0.2); color: white; border: 2px solid rgba(255,255,255,0.3);
+                          {% endif %}">
+                    🌈 Combo
+                </a>
 
-    <!-- Posts Grid -->
-    {% if posts %}
-        {% for post in posts %}
-            {% include 'post_card_template.html' %}
-        {% endfor %}
-    {% else %}
-        <!-- Empty State -->
-        <div style="text-align: center; padding: 4rem 2rem; background: #f8f9fa; border-radius: 15px; margin-top: 2rem;">
-            <div style="font-size: 4rem; margin-bottom: 1rem;">{{ filter_emoji if filter_emoji != 'all' else '📭' }}</div>
-            <h3 style="color: #666; margin-bottom: 0.5rem;">No posts found yet</h3>
-            <p style="color: #999;">
-                {% if filter_emoji != 'all' %}
-                Be the first to share something that deserves a {{ filter_emoji }}!
-                {% else %}
-                Be the first to share an uplifting story!
-                {% endif %}
-            </p>
-            <a href="{{ url_for('create_post') }}"
-               style="display: inline-block; margin-top: 1rem; padding: 0.75rem 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 25px; font-weight: 600;">
-                Share Your Story
-            </a>
+                <!-- Individual Emoji Tabs -->
+                {% for emoji in allowed_emojis %}
+                <a href="{{ url_for('top', filter=emoji) }}"
+                   style="text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 25px; font-size: 1.5rem; transition: all 0.3s;
+                          {% if filter_emoji == emoji %}
+                          background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.2); transform: scale(1.1);
+                          {% else %}
+                          background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3);
+                          {% endif %}">
+                    {{ emoji }}
+                </a>
+                {% endfor %}
+            </div>
+
+            <!-- Fun Stats Bar -->
+            {% if filter_emoji == 'combo' and posts|length > 0 %}
+            <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 1rem; border-radius: 10px; text-align: center; margin-bottom: 2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <p style="margin: 0; font-size: 1.1rem; font-weight: 600;">
+                    🌟 {{ posts|length }} universally loved post{% if posts|length != 1 %}s{% endif %} with 3+ different reactions!
+                </p>
+            </div>
+            {% elif filter_emoji != 'all' and posts|length > 0 %}
+            <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 1rem; border-radius: 10px; text-align: center; margin-bottom: 2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <p style="margin: 0; font-size: 1.1rem; font-weight: 600;">
+                    🎯 Found {{ posts|length }} post{% if posts|length != 1 %}s{% endif %} that made people feel {{ filter_emoji }}
+                </p>
+            </div>
+            {% endif %}
+
+            <!-- Posts Grid -->
+            {% if posts %}
+                {% for post in posts %}
+                    {% include 'post_card_template.html' %}
+                {% endfor %}
+            {% else %}
+                <!-- Empty State -->
+                <div style="text-align: center; padding: 4rem 2rem; background: #f8f9fa; border-radius: 15px; margin-top: 2rem;">
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">{{ filter_emoji if filter_emoji not in ['all', 'combo'] else '📭' }}</div>
+                    <h3 style="color: #666; margin-bottom: 0.5rem;">No posts found yet</h3>
+                    <p style="color: #999;">
+                        {% if filter_emoji == 'combo' %}
+                        Be the first to share something that deserves all the reactions!
+                        {% elif filter_emoji != 'all' %}
+                        Be the first to share something that deserves a {{ filter_emoji }}!
+                        {% else %}
+                        Be the first to share an uplifting story!
+                        {% endif %}
+                    </p>
+                    <a href="{{ url_for('create_post') }}"
+                       style="display: inline-block; margin-top: 1rem; padding: 0.75rem 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 25px; font-weight: 600;">
+                        Share Your Story
+                    </a>
+                </div>
+            {% endif %}
         </div>
-    {% endif %}
 
-    <!-- Explanation Box -->
-    <div style="margin-top: 3rem; padding: 1.5rem; background: #fff9e6; border-left: 4px solid #ffc107; border-radius: 8px;">
-        <h3 style="margin-top: 0; color: #f57c00;">💡 How it works</h3>
-        <p style="color: #666; margin-bottom: 0;">
-            Click on an emoji above to see posts sorted by that specific reaction!
-            Each post shows the top 3 most popular reactions, helping you discover
-            the stories that resonate most with our community. No comments needed –
-            just pure, positive vibes! ✨
-        </p>
+        <!-- Sidebar with Leaderboard and Personal Stats -->
+        <div style="position: sticky; top: 2rem;">
+
+            <!-- Emoji Leaderboard -->
+            <div style="background: white; border-radius: 12px; padding: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 1rem;">
+                <h3 style="margin-top: 0; color: #333; display: flex; align-items: center; gap: 0.5rem; font-size: 1rem;">
+                    <span style="font-size: 1.2rem;">🏆</span>
+                    Trending
+                </h3>
+
+                {% if leaderboard %}
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        {% for item in leaderboard %}
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem; background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); border-radius: 8px; transition: transform 0.2s;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="font-size: 1.5rem;">{{ item.emoji }}</span>
+                                <div>
+                                    <div style="font-weight: 600; color: #333; font-size: 0.85rem;">{{ item.count }}</div>
+                                </div>
+                            </div>
+                            {% if loop.index == 1 %}
+                            <span style="background: linear-gradient(135deg, #FFD700, #FFA500); color: white; padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.7rem; font-weight: bold;">🥇</span>
+                            {% elif loop.index == 2 %}
+                            <span style="background: linear-gradient(135deg, #C0C0C0, #808080); color: white; padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.7rem; font-weight: bold;">🥈</span>
+                            {% elif loop.index == 3 %}
+                            <span style="background: linear-gradient(135deg, #CD7F32, #8B4513); color: white; padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.7rem; font-weight: bold;">🥉</span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p style="color: #999; text-align: center; margin: 1rem 0; font-size: 0.85rem;">No reactions yet</p>
+                {% endif %}
+            </div>
+
+            <!-- Personal Stats -->
+            {% if personal_stats %}
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); color: white;">
+                <h3 style="margin-top: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1rem;">
+                    <span style="font-size: 1.2rem;">📊</span>
+                    Your Style
+                </h3>
+
+                <div style="text-align: center; padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.3);">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.25rem;">
+                        {{ personal_stats.favorite_emoji if personal_stats.favorite_emoji else '😊' }}
+                    </div>
+                    <div style="font-size: 0.75rem; opacity: 0.9;">Favorite</div>
+                </div>
+
+                <div style="margin-top: 1rem;">
+                    <div style="font-size: 1.5rem; font-weight: bold; text-align: center;">
+                        {{ personal_stats.total_reactions }}
+                    </div>
+                    <div style="font-size: 0.75rem; text-align: center; opacity: 0.9;">
+                        Total reactions
+                    </div>
+                </div>
+
+                {% if personal_stats.emoji_breakdown %}
+                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.3);">
+                    <div style="font-size: 0.75rem; font-weight: 600; margin-bottom: 0.5rem; opacity: 0.9;">Breakdown:</div>
+                    {% for item in personal_stats.emoji_breakdown[:3] %}
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem;">
+                        <span style="font-size: 1.2rem;">{{ item.emoji }}</span>
+                        <div style="display: flex; align-items: center; gap: 0.4rem;">
+                            <div style="background: rgba(255,255,255,0.3); border-radius: 8px; height: 4px; width: 50px; overflow: hidden;">
+                                <div style="background: white; height: 100%; width: {{ (item.count / personal_stats.total_reactions * 100)|int }}%; border-radius: 8px;"></div>
+                            </div>
+                            <span style="font-size: 0.75rem; font-weight: 600; min-width: 20px;">{{ item.count }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Explanation Box -->
+            <div style="margin-top: 1rem; padding: 1rem; background: #fff9e6; border-left: 3px solid #ffc107; border-radius: 8px;">
+                <h4 style="margin-top: 0; color: #f57c00; display: flex; align-items: center; gap: 0.4rem; font-size: 0.9rem;">
+                    <span>💡</span> Guide
+                </h4>
+                <p style="color: #666; margin-bottom: 0.4rem; font-size: 0.8rem; line-height: 1.4;">
+                    <strong>🌈 Combo:</strong> 3+ reactions
+                </p>
+                <p style="color: #666; margin-bottom: 0.4rem; font-size: 0.8rem; line-height: 1.4;">
+                    <strong>🏆 Trending:</strong> This week's top
+                </p>
+                <p style="color: #666; margin-bottom: 0; font-size: 0.8rem; line-height: 1.4;">
+                    <strong>📊 Style:</strong> Your patterns
+                </p>
+            </div>
+        </div>
     </div>
 
 </div>
@@ -94,7 +203,23 @@ a[href*="filter="]:hover {
     box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
 }
 
+/* Hover effect for leaderboard items */
+div[style*="linear-gradient(135deg, #667eea15"]:hover {
+    transform: translateX(5px);
+}
+
 /* Responsive adjustments */
+@media (max-width: 1024px) {
+    .container > div {
+        grid-template-columns: 1fr !important;
+    }
+
+    .container > div > div:last-child {
+        position: static !important;
+        margin-top: 2rem;
+    }
+}
+
 @media (max-width: 768px) {
     h1 {
         font-size: 2rem !important;
