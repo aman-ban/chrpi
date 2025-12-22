@@ -34,7 +34,7 @@
     <nav class="pt-1">
       {% if user %}
         <a href="{{ url_for('feed') }}" class="mx-2">Feed</a>
-        <a href="{{ url_for('top') }}" class="mx-2">Top Smiles</a>
+        <a href="{{ url_for('top') }}" class="mx-2">Top Posts</a>
         <a href="{{ url_for('create_post') }}" class="mx-2">New Post</a>
         <a href="{{ url_for('user_profile', username=user.username) }}" class="mx-2">My Profile</a>
         <a href="{{ url_for('edit_profile') }}" class="mx-2">Edit Profile</a>

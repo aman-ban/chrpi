@@ -1,12 +1,10 @@
-/* ---------------------------------------------------
-   Color Palette (your selected colors)
---------------------------------------------------- */
+/* Color Palette (your selected colors) */
 :root {
-    --cerulean: #0081a7ff;           /* Deep Blue - For text/nav */
-    --tropical-teal: #00afb9ff;      /* Bright Teal - For secondary text/hover */
-    --light-yellow: #fdfcdcff;       /* Very Light Yellow - For borders/accents */
-    --soft-apricot: #fed9b7ff;       /* Light Peach - Primary background */
-    --vibrant-coral: #f07167ff;      /* Coral Red - Accent/Smile Button */
+    --cerulean: #0081a7ff;
+    --tropical-teal: #00afb9ff;
+    --light-yellow: #fdfcdcff;
+    --soft-apricot: #fed9b7ff;
+    --vibrant-coral: #f07167ff;
 
     --text-dark: #1a1a1a;
     --text-soft: #555;
@@ -14,9 +12,7 @@
     --border-light: rgba(0,0,0,0.05);
 }
 
-/* ---------------------------------------------------
-   GLOBAL
---------------------------------------------------- */
+/* GLOBAL */
 body {
     background: var(--soft-apricot);
     color: var(--text-dark);
@@ -36,9 +32,7 @@ body {
     margin: 0;
 }
 
-/* ---------------------------------------------------
-   HEADERS / TITLES
---------------------------------------------------- */
+/* HEADERS / TITLES */
 .page-title {
     font-size: 2.5rem;
     font-weight: 900;
@@ -66,9 +60,7 @@ body {
 }
 
 
-/* ---------------------------------------------------
-   POST CARDS (The focus area)
---------------------------------------------------- */
+/* POST CARDS */
 .post-list {
     display: flex;
     flex-direction: column;
@@ -77,21 +69,16 @@ body {
 
 .post-card {
     background: var(--card-bg);
-    /* Use a colored border for a friendlier look */
     border: 3px solid var(--light-yellow);
     border-radius: 16px;
     overflow: hidden;
-    /* Deeper, more noticeable shadow for cheerfulness */
     box-shadow: 0 8px 15px rgba(0,0,0,0.15);
     transition: transform .2s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow .2s ease;
 }
 
 .post-card:hover {
-    /* Slightly more lift on hover */
     transform: translateY(-4px);
-    /* Brighter, larger shadow */
     box-shadow: 0 12px 20px rgba(0,0,0,0.25);
-    /* Add a subtle highlight border on hover */
     border-color: var(--tropical-teal);
 }
 
@@ -100,9 +87,7 @@ body {
     margin-top: 2rem;
 }
 
-/* ---------------------------------------------------
-   POST IMAGES & BODY
---------------------------------------------------- */
+/* POST IMAGES & BODY */
 .post-image, .post-image-large {
     width: 100%;
     display: block;
@@ -148,9 +133,7 @@ body {
     color: #d85e56;
 }
 
-/* ---------------------------------------------------
-   META TEXT (Timestamp, Username)
---------------------------------------------------- */
+/* META TEXT (Timestamp, Username) */
 .post-meta {
     font-size: 0.95rem;
     color: var(--text-soft);
@@ -161,9 +144,7 @@ body {
     display: inline-block;
 }
 
-/* ---------------------------------------------------
-   NAVBAR / LOGO / LINKS
---------------------------------------------------- */
+/* NAVBAR / LOGO / LINKS */
 .navbar-custom {
     background: var(--tropical-teal);
     color: white;
@@ -180,27 +161,25 @@ body {
 
 .navbar-custom a:hover {
     opacity: 0.9;
-    color: var(--light-yellow); /* Highlight on hover */
+    color: var(--light-yellow);
 }
 
-/* ---------------------------------------------------
-   BUTTONS
---------------------------------------------------- */
+/* BUTTONS */
 .btn {
-    border-radius: 20px !important; /* Rounded pill shape for cheerfulness */
+    border-radius: 20px !important;
     padding: 0.5rem 1.25rem !important;
     font-size: 0.95rem;
     transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
 .btn-primary {
-    background: var(--cerulean); /* Used Cerulean for main action */
+    background: var(--cerulean);
     border: none;
     font-weight: 700;
 }
 
 .btn-primary:hover {
-    background: var(--tropical-teal); /* Hover is the brighter Teal */
+    background: var(--tropical-teal);
     transform: translateY(-1px);
 }
 
@@ -209,7 +188,7 @@ body {
     border: none !important;
     color: white;
     font-weight: 700;
-    box-shadow: 0 3px 6px rgba(240, 113, 103, 0.4) !important; /* Coral shadow */
+    box-shadow: 0 3px 6px rgba(240, 113, 103, 0.4) !important;
 }
 
 .btn-smile:hover {
@@ -218,7 +197,6 @@ body {
     box-shadow: 0 5px 10px rgba(240, 113, 103, 0.6) !important;
 }
 
-/* New: Active state when already smiled */
 .btn-smile-active {
     background: var(--tropical-teal) !important;
     box-shadow: 0 3px 6px rgba(0, 175, 185, 0.4) !important;
@@ -229,13 +207,9 @@ body {
 }
 
 
-/* ---------------------------------------------------
-   FORMS & INPUTS
---------------------------------------------------- */
+/* FORMS & INPUTS */
 input, textarea, select {
-    /* Slightly less rounded inputs for modern look */
     border-radius: 10px !important;
-    /* Use the light yellow for a friendly border focus */
     border: 2px solid var(--light-yellow) !important;
     padding: 0.75rem 1rem !important;
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
@@ -246,13 +220,11 @@ input:focus, textarea:focus {
     box-shadow: 0 0 0 0.2rem rgba(0, 175, 185, 0.25) !important;
 }
 
-/* ---------------------------------------------------
-   PROFILE PAGE
---------------------------------------------------- */
+/* PROFILE PAGE */
 .profile-header {
     text-align: center;
     padding: 2rem;
-    background: var(--light-yellow); /* Highlight the profile header */
+    background: var(--light-yellow);
     border-radius: 16px;
     margin-bottom: 2rem;
 }
@@ -268,9 +240,7 @@ input:focus, textarea:focus {
     color: var(--text-soft);
 }
 
-/* ---------------------------------------------------
-   LINKS
---------------------------------------------------- */
+/* LINKS */
 a {
     color: var(--cerulean);
     text-decoration: none;
