@@ -1,44 +1,108 @@
 {% extends "base.html" %}
 
-{% block title %}{{ title }}{% endblock %}
-
 {% block content %}
-<h1 class="page-title">{{ title }}</h1>
+<div class="container" style="max-width: 800px; margin: 2rem auto; padding: 0 1rem;">
 
-<div class="post-list">
-    {% if not posts %}
-        <div class="text-center p-5">
-            <p class="fs-4 text-muted">No posts have received any smiles yet!</p>
+    <!-- Header Section -->
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <h1 style="font-size: 2.5rem; color: #333; margin-bottom: 0.5rem;">
+            {{ current_category.name }}
+        </h1>
+        <p style="color: #666; font-size: 1.1rem; margin-bottom: 2rem;">
+            {{ current_category.description }}
+        </p>
+    </div>
+
+    <!-- Emoji Filter Tabs -->
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-bottom: 2rem; padding: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+
+        <!-- All Posts Tab -->
+        <a href="{{ url_for('top', filter='all') }}"
+           style="text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 25px; font-weight: 600; transition: all 0.3s;
+                  {% if filter_emoji == 'all' %}
+                  background: white; color: #667eea; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                  {% else %}
+                  background: rgba(255,255,255,0.2); color: white; border: 2px solid rgba(255,255,255,0.3);
+                  {% endif %}">
+            ✨ All
+        </a>
+
+        <!-- Individual Emoji Tabs -->
+        {% for emoji in allowed_emojis %}
+        <a href="{{ url_for('top', filter=emoji) }}"
+           style="text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 25px; font-size: 1.5rem; transition: all 0.3s;
+                  {% if filter_emoji == emoji %}
+                  background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.2); transform: scale(1.1);
+                  {% else %}
+                  background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3);
+                  {% endif %}">
+            {{ emoji }}
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Fun Stats Bar (if filtered by specific emoji) -->
+    {% if filter_emoji != 'all' and posts|length > 0 %}
+    <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 1rem; border-radius: 10px; text-align: center; margin-bottom: 2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <p style="margin: 0; font-size: 1.1rem; font-weight: 600;">
+            🎯 Found {{ posts|length }} post{% if posts|length != 1 %}s{% endif %} that made people feel {{ filter_emoji }}
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- Posts Grid -->
+    {% if posts %}
+        {% for post in posts %}
+            {% include 'post_card_template.html' %}
+        {% endfor %}
+    {% else %}
+        <!-- Empty State -->
+        <div style="text-align: center; padding: 4rem 2rem; background: #f8f9fa; border-radius: 15px; margin-top: 2rem;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">{{ filter_emoji if filter_emoji != 'all' else '📭' }}</div>
+            <h3 style="color: #666; margin-bottom: 0.5rem;">No posts found yet</h3>
+            <p style="color: #999;">
+                {% if filter_emoji != 'all' %}
+                Be the first to share something that deserves a {{ filter_emoji }}!
+                {% else %}
+                Be the first to share an uplifting story!
+                {% endif %}
+            </p>
+            <a href="{{ url_for('create_post') }}"
+               style="display: inline-block; margin-top: 1rem; padding: 0.75rem 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 25px; font-weight: 600;">
+                Share Your Story
+            </a>
         </div>
     {% endif %}
 
-    {% for post in posts %}
-        {% include 'post_card_template.html' %}
-    {% endfor %}
-
-        <span class="post-meta ms-2">
-            {% if post.top_reactions %}
-                {% for reaction_pair in post.top_reactions.split(',') %}
-                    {% set parts = reaction_pair.split(':') %}
-                    <span title="{{ parts[1] }} total reactions with {{ parts[0] }}">
-                        {{ parts[0] }} {{ parts[1] }}
-                    </span>
-                {% endfor %}
-            {% else %}
-                Total Smiles: {{ post.smiles }}
-            {% endif %}
-        </span>
-    </div>
-
-    <div class="post-meta">
-        Posted by
-        <a href="{{ url_for('user_profile', username=post.username) }}">@{{ post.username }}</a>
-        — {{ post.timestamp }}
+    <!-- Explanation Box -->
+    <div style="margin-top: 3rem; padding: 1.5rem; background: #fff9e6; border-left: 4px solid #ffc107; border-radius: 8px;">
+        <h3 style="margin-top: 0; color: #f57c00;">💡 How it works</h3>
+        <p style="color: #666; margin-bottom: 0;">
+            Click on an emoji above to see posts sorted by that specific reaction!
+            Each post shows the top 3 most popular reactions, helping you discover
+            the stories that resonate most with our community. No comments needed –
+            just pure, positive vibes! ✨
+        </p>
     </div>
 
 </div>
-        </div>
-    </div>
-    {% endfor %}
-</div>
+
+<style>
+/* Hover effects for emoji tabs */
+a[href*="filter="]:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 2rem !important;
+    }
+
+    .container {
+        padding: 0 0.5rem !important;
+    }
+}
+</style>
 {% endblock %}

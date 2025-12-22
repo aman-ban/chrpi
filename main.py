@@ -536,32 +536,64 @@ def top():
     user_id = user["id"] if user else 0
     db = get_db()
 
-    posts = db.execute("""
-        SELECT 
-            posts.*, 
-            users.username, 
-            users.profile_image,
-            -- Get the user's specific reaction if it exists
-            (SELECT reaction_emoji FROM post_smiles WHERE post_smiles.post_id = posts.id AND post_smiles.user_id = ?) as user_reaction,
-            -- Get the top 3 most common reactions and their counts for display
-            (SELECT GROUP_CONCAT(reaction_emoji || ':' || reaction_count) 
-             FROM (SELECT reaction_emoji, COUNT(*) as reaction_count 
-                   FROM post_smiles 
-                   WHERE post_id = posts.id 
-                   GROUP BY reaction_emoji 
-                   ORDER BY reaction_count DESC 
-                   LIMIT 3)
-            ) as top_reactions
-        FROM posts
-        JOIN users ON posts.user_id = users.id
-        ORDER BY posts.smiles DESC, posts.timestamp DESC
-        LIMIT 100
-    """, (user_id,)).fetchall()
+    # Get the filter parameter (which emoji to filter by)
+    filter_emoji = request.args.get('filter', 'all')
+
+    # Validate the filter
+    if filter_emoji not in ['all'] + ALLOWED_EMOJIS:
+        filter_emoji = 'all'
+
+    # Base query that gets all post data
+    if filter_emoji == 'all':
+        # Original behavior - sort by total smiles
+        posts = db.execute("""
+            SELECT 
+                posts.*, 
+                users.username, 
+                users.profile_image,
+                (SELECT reaction_emoji FROM post_smiles WHERE post_smiles.post_id = posts.id AND post_smiles.user_id = ?) as user_reaction,
+                (SELECT GROUP_CONCAT(reaction_emoji || ':' || reaction_count) 
+                 FROM (SELECT reaction_emoji, COUNT(*) as reaction_count 
+                       FROM post_smiles 
+                       WHERE post_id = posts.id 
+                       GROUP BY reaction_emoji 
+                       ORDER BY reaction_count DESC 
+                       LIMIT 3)
+                ) as top_reactions
+            FROM posts
+            JOIN users ON posts.user_id = users.id
+            ORDER BY posts.smiles DESC, posts.timestamp DESC
+            LIMIT 100
+        """, (user_id,)).fetchall()
+    else:
+        # Filter by specific emoji - sort by count of that emoji
+        posts = db.execute("""
+            SELECT 
+                posts.*, 
+                users.username, 
+                users.profile_image,
+                (SELECT reaction_emoji FROM post_smiles WHERE post_smiles.post_id = posts.id AND post_smiles.user_id = ?) as user_reaction,
+                (SELECT GROUP_CONCAT(reaction_emoji || ':' || reaction_count) 
+                 FROM (SELECT reaction_emoji, COUNT(*) as reaction_count 
+                       FROM post_smiles 
+                       WHERE post_id = posts.id 
+                       GROUP BY reaction_emoji 
+                       ORDER BY reaction_count DESC 
+                       LIMIT 3)
+                ) as top_reactions,
+                (SELECT COUNT(*) FROM post_smiles WHERE post_id = posts.id AND reaction_emoji = ?) as emoji_count
+            FROM posts
+            JOIN users ON posts.user_id = users.id
+            WHERE posts.id IN (
+                SELECT DISTINCT post_id FROM post_smiles WHERE reaction_emoji = ?
+            )
+            ORDER BY emoji_count DESC, posts.timestamp DESC
+            LIMIT 100
+        """, (user_id, filter_emoji, filter_emoji)).fetchall()
 
     processed_posts = []
     for post in posts:
         post_dict = dict(post)
-
         reaction_counts = {emoji: 0 for emoji in ALLOWED_EMOJIS}
 
         if post_dict['top_reactions']:
@@ -575,9 +607,32 @@ def top():
         post_dict['reaction_counts_dict'] = reaction_counts
         processed_posts.append(post_dict)
 
-    return render_template("feed.html", posts=processed_posts, user=user, title="Top Smiled Posts",
-                           allowed_emojis=ALLOWED_EMOJIS)
+    # Define fun categories for each emoji
+    emoji_categories = {
+        '😊': {'name': 'Pure Joy', 'description': 'Posts that warm the heart'},
+        '😂': {'name': 'Tears of Joy', 'description': 'Happiness so good it makes you cry'},
+        '🥹': {'name': 'Emotional Moments', 'description': 'Stories that touch the soul'},
+        '🥰': {'name': 'Love & Warmth', 'description': 'Aww-worthy wholesome content'},
+        '🤩': {'name': 'Mind-Blowing', 'description': 'Amazing stories that inspire awe'},
+        '🥳': {'name': 'Celebration Central', 'description': 'Victories worth celebrating'}
+    }
 
+    current_category = emoji_categories.get(filter_emoji, {
+        'name': 'All Top Posts',
+        'description': 'The most uplifting stories from our community'
+    }) if filter_emoji != 'all' else {
+        'name': 'All Top Posts',
+        'description': 'The most uplifting stories from our community'
+    }
+
+    return render_template("top.html",
+                           posts=processed_posts,
+                           user=user,
+                           title="Top Smiled Posts",
+                           allowed_emojis=ALLOWED_EMOJIS,
+                           filter_emoji=filter_emoji,
+                           emoji_categories=emoji_categories,
+                           current_category=current_category)
 
 @app.route('/view/<int:post_id>')
 def view_single_post(post_id):
