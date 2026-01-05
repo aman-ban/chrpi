@@ -13,6 +13,15 @@ from flask_wtf.csrf import CSRFProtect
 from dotenv import load_dotenv
 import requests
 from bs4 import BeautifulSoup
+import nltk
+
+# This ensures the sentiment analysis data is present on the server
+try:
+    nltk.data.find('corpora/movie_reviews')
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    import textblob.download_corpora
+    textblob.download_corpora.main()
 
 # Load environment variables
 load_dotenv()
