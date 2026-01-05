@@ -28,14 +28,24 @@ load_dotenv()
 
 # Config
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_FOLDER = os.path.join(APP_DIR, "static", "uploads")
-DB_PATH = os.path.join(APP_DIR, "chrpi.db")
+
+if os.environ.get("RENDER"):
+
+    DB_PATH = "/data/chrpi.db"
+    UPLOAD_FOLDER = "/data/uploads"
+else:
+
+    DB_PATH = os.path.join(APP_DIR, "chrpi.db")
+    UPLOAD_FOLDER = os.path.join(APP_DIR, "static", "uploads")
+
 ALLOWED_EXT = {"png", "jpg", "jpeg", "gif"}
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "amhdnrba!102998")
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+# Ensure the folder exists (especially on the new /data disk)
+os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
 # Initialize CSRF Protection
 csrf = CSRFProtect(app)
@@ -162,7 +172,7 @@ def save_image(file_storage, resize_to=900):
         print(f"Error saving image: {e}")
         pass
 
-    return f"/static/uploads/{new_name}"
+    return f"/uploads/{new_name}"
 
 
 def analyze_sentiment(text: str):
@@ -778,6 +788,11 @@ def page_not_found(e):
 def internal_server_error(e):
     return render_template('500.html'), 500
 
+from flask import send_from_directory
+
+@app.route('/uploads/<path:filename>')
+def serve_uploads(filename):
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 if __name__ == "__main__":
     app.run(debug=True)
