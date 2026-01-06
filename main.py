@@ -490,7 +490,6 @@ def smile(post_id):
         db.execute("UPDATE posts SET smiles = smiles + 1 WHERE id = ?", (post_id,))
         db.commit()
     else:
-        # Update the existing reaction
         db.execute("UPDATE post_smiles SET reaction_emoji = ? WHERE user_id = ? AND post_id = ?",
                    (reaction, me["id"], post_id))
         db.commit()
@@ -506,20 +505,10 @@ def feed():
     db = get_db()
 
     posts = db.execute("""
-        SELECT 
-            posts.*, 
-            users.username, 
-            users.profile_image,
-            -- Get the user's specific reaction if it exists
+        SELECT posts.*, users.username, users.profile_image,
             (SELECT reaction_emoji FROM post_smiles WHERE post_smiles.post_id = posts.id AND post_smiles.user_id = ?) as user_reaction,
-            -- Get the top 3 most common reactions and their counts for display
             (SELECT GROUP_CONCAT(reaction_emoji || ':' || reaction_count) 
-             FROM (SELECT reaction_emoji, COUNT(*) as reaction_count 
-                   FROM post_smiles 
-                   WHERE post_id = posts.id 
-                   GROUP BY reaction_emoji 
-                   ORDER BY reaction_count DESC 
-                   LIMIT 3)
+             FROM (SELECT reaction_emoji, COUNT(*) as reaction_count FROM post_smiles WHERE post_id = posts.id GROUP BY reaction_emoji ORDER BY reaction_count DESC LIMIT 3)
             ) as top_reactions
         FROM posts
         JOIN users ON posts.user_id = users.id
@@ -528,26 +517,36 @@ def feed():
         ORDER BY posts.timestamp DESC
     """, (me["id"], me["id"])).fetchall()
 
+    title = "Following Feed"
+
+    if not posts:
+        title = "Discovery Feed"
+        posts = db.execute("""
+            SELECT posts.*, users.username, users.profile_image,
+                (SELECT reaction_emoji FROM post_smiles WHERE post_smiles.post_id = posts.id AND post_smiles.user_id = ?) as user_reaction,
+                (SELECT GROUP_CONCAT(reaction_emoji || ':' || reaction_count) 
+                 FROM (SELECT reaction_emoji, COUNT(*) as reaction_count FROM post_smiles WHERE post_id = posts.id GROUP BY reaction_emoji ORDER BY reaction_count DESC LIMIT 3)
+                ) as top_reactions
+            FROM posts
+            JOIN users ON posts.user_id = users.id
+            ORDER BY posts.timestamp DESC
+            LIMIT 50
+        """, (me["id"],)).fetchall()
+
     processed_posts = []
     for post in posts:
         post_dict = dict(post)
-
         reaction_counts = {emoji: 0 for emoji in ALLOWED_EMOJIS}
-
         if post_dict['top_reactions']:
             for item in post_dict['top_reactions'].split(','):
                 try:
                     emoji, count = item.split(':')
                     reaction_counts[emoji] = int(count)
-                except ValueError:
-                    continue
-
+                except ValueError: continue
         post_dict['reaction_counts_dict'] = reaction_counts
         processed_posts.append(post_dict)
 
-    return render_template("feed.html", posts=processed_posts, user=me, title="Following Feed",
-                           allowed_emojis=ALLOWED_EMOJIS)
-
+    return render_template("feed.html", posts=processed_posts, user=me, title=title, allowed_emojis=ALLOWED_EMOJIS)
 
 @app.route("/top")
 def top():
@@ -555,16 +554,12 @@ def top():
     user_id = user["id"] if user else 0
     db = get_db()
 
-    # Get the filter parameter (which emoji to filter by)
     filter_emoji = request.args.get('filter', 'all')
 
-    # Validate the filter
     if filter_emoji not in ['all', 'combo'] + ALLOWED_EMOJIS:
         filter_emoji = 'all'
 
-    # Base query that gets all post data
     if filter_emoji == 'all':
-        # Original behavior - sort by total smiles
         posts = db.execute("""
             SELECT 
                 posts.*, 
@@ -585,7 +580,6 @@ def top():
             LIMIT 100
         """, (user_id,)).fetchall()
     elif filter_emoji == 'combo':
-        # Combo filter - posts with 3+ different emoji types and high engagement
         posts = db.execute("""
             SELECT 
                 posts.*, 
@@ -612,30 +606,27 @@ def top():
             LIMIT 100
         """, (user_id,)).fetchall()
     else:
-        # Filter by specific emoji - sort by count of that emoji
         posts = db.execute("""
-            SELECT 
-                posts.*, 
-                users.username, 
-                users.profile_image,
-                (SELECT reaction_emoji FROM post_smiles WHERE post_smiles.post_id = posts.id AND post_smiles.user_id = ?) as user_reaction,
-                (SELECT GROUP_CONCAT(reaction_emoji || ':' || reaction_count) 
-                 FROM (SELECT reaction_emoji, COUNT(*) as reaction_count 
-                       FROM post_smiles 
-                       WHERE post_id = posts.id 
-                       GROUP BY reaction_emoji 
-                       ORDER BY reaction_count DESC 
-                       LIMIT 3)
-                ) as top_reactions,
-                (SELECT COUNT(*) FROM post_smiles WHERE post_id = posts.id AND reaction_emoji = ?) as emoji_count
-            FROM posts
-            JOIN users ON posts.user_id = users.id
-            WHERE posts.id IN (
-                SELECT DISTINCT post_id FROM post_smiles WHERE reaction_emoji = ?
-            )
-            ORDER BY emoji_count DESC, posts.timestamp DESC
-            LIMIT 100
-        """, (user_id, filter_emoji, filter_emoji)).fetchall()
+                    SELECT 
+                        posts.*, 
+                        users.username, 
+                        users.profile_image,
+                        (SELECT reaction_emoji FROM post_smiles WHERE post_smiles.post_id = posts.id AND post_smiles.user_id = ?) as user_reaction,
+                        (SELECT GROUP_CONCAT(reaction_emoji || ':' || reaction_count) 
+                         FROM (SELECT reaction_emoji, COUNT(*) as reaction_count 
+                               FROM post_smiles 
+                               WHERE post_id = posts.id 
+                               GROUP BY reaction_emoji 
+                               ORDER BY reaction_count DESC 
+                               LIMIT 3)
+                        ) as top_reactions,
+                        (SELECT COUNT(*) FROM post_smiles WHERE post_id = posts.id AND reaction_emoji = ?) as emoji_count
+                    FROM posts
+                    JOIN users ON posts.user_id = users.id
+                    -- Removed the "WHERE posts.id IN..." filter to show all posts
+                    ORDER BY emoji_count DESC, posts.timestamp DESC
+                    LIMIT 100
+                """, (user_id, filter_emoji)).fetchall()
 
     processed_posts = []
     for post in posts:
@@ -653,7 +644,6 @@ def top():
         post_dict['reaction_counts_dict'] = reaction_counts
         processed_posts.append(post_dict)
 
-    # Calculate Emoji Leaderboard (trending emojis across all posts)
     emoji_stats = db.execute("""
         SELECT reaction_emoji, COUNT(*) as count
         FROM post_smiles
@@ -667,7 +657,6 @@ def top():
 
     leaderboard = [{'emoji': row['reaction_emoji'], 'count': row['count']} for row in emoji_stats]
 
-    # Personal Stats (if user is logged in)
     personal_stats = None
     if user:
         user_emoji_stats = db.execute("""
@@ -687,7 +676,6 @@ def top():
             'emoji_breakdown': [{'emoji': row['reaction_emoji'], 'count': row['count']} for row in user_emoji_stats]
         }
 
-    # Define fun categories for each emoji
     emoji_categories = {
         '😊': {'name': 'Pure Joy', 'description': 'Posts that warm the heart'},
         '😂': {'name': 'Tears of Joy', 'description': 'Happiness so good it makes you cry'},
@@ -777,6 +765,19 @@ def view_single_post(post_id):
     return render_template('post_view.html', post=post_data, user=me, title=f"Post by {post_data['username']}",
                            allowed_emojis=ALLOWED_EMOJIS)
 
+@app.route("/search")
+def search():
+    query = request.args.get("q", "").strip()
+    users = []
+    if query:
+        db = get_db()
+        # Search for usernames that contain the query string
+        users = db.execute(
+            "SELECT id, username, profile_image FROM users WHERE username LIKE ?",
+            (f"%{query}%",)
+        ).fetchall()
+
+    return render_template("search_results.html", users=users, query=query, user=current_user())
 
 # Error Handlers
 @app.errorhandler(404)

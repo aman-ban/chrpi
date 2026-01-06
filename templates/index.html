@@ -4,23 +4,28 @@
 {% block content %}
 <div class="feed-container">
 
+    <div class="search-section" style="margin-bottom: 2rem; text-align: center;">
+        <form action="{{ url_for('search') }}" method="GET" class="search-form">
+            <input type="text" name="q" placeholder="Search for positive people..."
+                   required style="padding: 10px; width: 60%; border-radius: 20px; border: 1px solid #ddd;">
+            <button type="submit" class="btn btn-secondary" style="border-radius: 20px; cursor: pointer;">🔍 Search</button>
+        </form>
+    </div>
+
     {% if posts %}
         <div class="post-list">
             {% for post in posts %}
-            <div class="post-card">
+            <div class="post-card" style="border: 1px solid #eee; padding: 15px; margin-bottom: 20px; border-radius: 10px;">
 
-                <a href="{{ url_for('post', post_id=post['id']) }}" class="post-image-link">
-                    {% if post['image_path'] %}
-                        <img src="{{ url_for('static', filename='uploads/' ~ post['image_path']) }}"
-                             class="post-image"
-                             alt="Post Image">
+                <a href="{{ url_for('view_single_post', post_id=post['id']) }}" class="post-image-link">
+                    {% if post['image'] %}
+                        <img src="{{ post['image'] }}" class="post-image" alt="Post Image" style="max-width: 100%; border-radius: 8px;">
                     {% endif %}
                 </a>
 
                 <div class="post-body">
-                    <a class="post-text-link"
-                       href="{{ url_for('post', post_id=post['id']) }}">
-                       {{ post['text'] }}
+                    <a class="post-text-link" href="{{ url_for('view_single_post', post_id=post['id']) }}" style="text-decoration: none; color: #333; font-size: 1.2rem; display: block; margin: 10px 0;">
+                       {{ post['content'] }}
                     </a>
 
                     {% if post['link'] %}
@@ -31,14 +36,14 @@
                     </div>
                     {% endif %}
 
-                    <div class="post-meta">
-                        <span class="post-reactions">⭐ {{ post['smiles'] }}</span>
+                    <div class="post-meta" style="font-size: 0.9rem; color: #777;">
+                        <span class="post-reactions">😊 {{ post['smiles'] }}</span>
                         <span class="post-divider">•</span>
                         <span class="post-author">
-                            by <a href="{{ url_for('profile', user_id=post['user_id']) }}">{{ post['username'] }}</a>
+                            by <a href="{{ url_for('user_profile', username=post['username']) }}">{{ post['username'] }}</a>
                         </span>
                         <span class="post-divider">•</span>
-                        <span class="post-time">{{ post['created_at'] }}</span>
+                        <span class="post-time">{{ post['timestamp']|datetime }}</span>
                     </div>
                 </div>
 
@@ -46,13 +51,11 @@
             {% endfor %}
         </div>
     {% else %}
-        <div class="empty-state">
-            <div class="empty-state-emoji">📭</div>
+        <div class="empty-state" style="text-align: center; padding: 50px;">
+            <div class="empty-state-emoji" style="font-size: 3rem;">📭</div>
             <h3>No posts yet!</h3>
             <p>Be the first to share something uplifting.</p>
-            <a href="{{ url_for('create_post') }}" class="btn btn-primary">
-                Share Your Story
-            </a>
+            <a href="{{ url_for('create_post') }}" class="btn btn-primary">Share Your Story</a>
         </div>
     {% endif %}
 
