@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+<div class="search-container" style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h2>Search Results for "{{ query }}"</h2>
+    <hr style="border: 0; border-top: 1px solid #eee; margin-bottom: 20px;">
+
+    {% if users %}
+        <div class="user-list">
+            {% for found_user in users %}
+                <div class="user-card" style="display: flex; align-items: center; justify-content: space-between; padding: 15px; border: 1px solid #eee; border-radius: 12px; margin-bottom: 10px; background: white;">
+                    <div style="display: flex; align-items: center;">
+                        <div class="profile-pic-container" style="width: 50px; height: 50px; border-radius: 50%; overflow: hidden; background: #f0f0f0; margin-right: 15px;">
+                            {% if found_user['profile_image'] %}
+                                <img src="{{ found_user['profile_image'] }}" alt="{{ found_user['username'] }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                                <div style="display: flex; align-items: center; justify-content: center; height: 100%; font-size: 1.5rem;">😊</div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h3 style="margin: 0;">
+                                <a href="{{ url_for('user_profile', username=found_user['username']) }}" style="text-decoration: none; color: #333;">
+                                    {{ found_user['username'] }}
+                                </a>
+                            </h3>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('user_profile', username=found_user['username']) }}" class="btn btn-secondary" style="text-decoration: none; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem;">View Profile</a>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state" style="text-align: center; padding: 40px;">
+            <div style="font-size: 3rem;">🔎</div>
+            <h3>No users found</h3>
+            <p>Try searching for a different name.</p>
+            <a href="{{ url_for('feed') }}" style="color: #007bff;">Back to Feed</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

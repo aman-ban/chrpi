@@ -771,7 +771,6 @@ def search():
     users = []
     if query:
         db = get_db()
-        # Search for usernames that contain the query string
         users = db.execute(
             "SELECT id, username, profile_image FROM users WHERE username LIKE ?",
             (f"%{query}%",)
