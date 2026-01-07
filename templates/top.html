@@ -3,167 +3,58 @@
 {% block content %}
 <div class="top-posts-layout">
 
-    <!-- Main Content Column -->
     <div>
-        <!-- Header Section -->
-        <div>
+        <div class="header-area" style="margin-bottom: 2rem;">
             <h1 class="page-title">{{ current_category.name }}</h1>
-            <p class="page-subtitle">{{ current_category.description }}</p>
+            <p class="page-subtitle" style="color: #666; font-size: 1.1rem;">{{ current_category.description }}</p>
         </div>
 
-        <!-- Emoji Filter Tabs -->
-        <div class="emoji-filter-container">
-
-            <!-- All Posts Tab -->
+        <div class="emoji-filter-container" style="display: flex; gap: 8px; margin-bottom: 25px; overflow-x: auto; white-space: nowrap; padding-bottom: 10px; scrollbar-width: none;">
             <a href="{{ url_for('top', filter='all') }}"
-               class="emoji-tab emoji-tab-text {% if filter_emoji == 'all' %}emoji-tab-active{% endif %}">
+               class="emoji-tab {% if filter_emoji == 'all' %}active-tab{% endif %}"
+               style="padding: 8px 20px; border-radius: 25px; text-decoration: none; background: {{ '#ffd700' if filter_emoji == 'all' else '#f0f0f0' }}; color: black; font-weight: 600;">
                 ✨ All
             </a>
 
-            <!-- Combo Tab -->
             <a href="{{ url_for('top', filter='combo') }}"
-               class="emoji-tab emoji-tab-text {% if filter_emoji == 'combo' %}emoji-tab-active{% endif %}">
+               class="emoji-tab {% if filter_emoji == 'combo' %}active-tab{% endif %}"
+               style="padding: 8px 20px; border-radius: 25px; text-decoration: none; background: {{ '#ffd700' if filter_emoji == 'combo' else '#f0f0f0' }}; color: black; font-weight: 600;">
                 🌈 Combo
             </a>
 
-            <!-- Individual Emoji Tabs -->
             {% for emoji in allowed_emojis %}
             <a href="{{ url_for('top', filter=emoji) }}"
-               class="emoji-tab emoji-tab-emoji {% if filter_emoji == emoji %}emoji-tab-active{% endif %}">
+               class="emoji-tab {% if filter_emoji == emoji %}active-tab{% endif %}"
+               style="padding: 8px 15px; border-radius: 25px; text-decoration: none; background: {{ '#ffd700' if filter_emoji == emoji else '#f0f0f0' }}; font-size: 1.2rem;">
                 {{ emoji }}
             </a>
             {% endfor %}
         </div>
 
-        <!-- Fun Stats Banner -->
-        {% if filter_emoji == 'combo' and posts|length > 0 %}
-        <div class="stats-banner">
-            <p>🌟 {{ posts|length }} universally loved post{% if posts|length != 1 %}s{% endif %} with 3+ different reactions!</p>
-        </div>
-        {% elif filter_emoji != 'all' and posts|length > 0 %}
-        <div class="stats-banner">
-            <p>🎯 Found {{ posts|length }} post{% if posts|length != 1 %}s{% endif %} that made people feel {{ filter_emoji }}</p>
-        </div>
-        {% endif %}
-
-        <!-- Posts Grid -->
-        {% if posts %}
-            {% for post in posts %}
-                {% include 'post_card_template.html' %}
-            {% endfor %}
-        {% else %}
-            <!-- Empty State -->
-            <div class="empty-state">
-                <div class="empty-state-emoji">
-                    {{ filter_emoji if filter_emoji not in ['all', 'combo'] else '📭' }}
-                </div>
-                <h3>No posts found yet</h3>
-                <p>
-                    {% if filter_emoji == 'combo' %}
-                    Be the first to share something that deserves all the reactions!
-                    {% elif filter_emoji != 'all' %}
-                    Be the first to share something that deserves a {{ filter_emoji }}!
-                    {% else %}
-                    Be the first to share an uplifting story!
-                    {% endif %}
-                </p>
-                <a href="{{ url_for('create_post') }}" class="btn">
-                    Share Your Story
-                </a>
+        {% if filter_emoji not in ['all', 'combo'] %}
+            <div class="vibe-banner" style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 12px 20px; border-radius: 10px; margin-bottom: 25px; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 1.5rem;">✨</span>
+                <span style="color: #495057;">Showing posts that sparked <strong>{{ current_category.name }}</strong> reactions first.</span>
             </div>
         {% endif %}
-    </div>
 
-    <!-- Sidebar with Leaderboard and Personal Stats -->
-    <div class="sidebar-sticky">
-
-        <!-- Emoji Leaderboard -->
-        <div class="leaderboard-card">
-            <h3 class="leaderboard-title">
-                <span>🏆</span> Trending
-            </h3>
-
-            {% if leaderboard %}
-                <div class="leaderboard-list">
-                    {% for item in leaderboard %}
-                    <div class="leaderboard-item">
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <span class="leaderboard-emoji">{{ item.emoji }}</span>
-                            <span class="leaderboard-count">{{ item.count }}</span>
-                        </div>
-                        {% if loop.index == 1 %}
-                        <span class="leaderboard-badge badge-gold">🥇</span>
-                        {% elif loop.index == 2 %}
-                        <span class="leaderboard-badge badge-silver">🥈</span>
-                        {% elif loop.index == 3 %}
-                        <span class="leaderboard-badge badge-bronze">🥉</span>
-                        {% endif %}
-                    </div>
-                    {% endfor %}
+        <div class="post-list">
+            {% for post in posts %}
+                <div class="post-wrapper" style="margin-bottom: 1.5rem;">
+                    {% include 'post_card_template.html' %}
                 </div>
             {% else %}
-                <p class="leaderboard-empty">No reactions yet</p>
-            {% endif %}
-        </div>
-
-        <!-- Personal Stats -->
-        {% if personal_stats %}
-        <div class="personal-stats-card">
-            <h3 class="personal-stats-title">
-                <span>📊</span> Your Style
-            </h3>
-
-            <div class="personal-stats-favorite">
-                <div class="personal-stats-emoji">
-                    {{ personal_stats.favorite_emoji if personal_stats.favorite_emoji else '😊' }}
+                <div class="empty-state" style="text-align: center; padding: 60px 20px;">
+                    <h3>Nothing to show yet</h3>
+                    <p>Be the first to brighten someone's day.</p>
+                    <a href="{{ url_for('create_post') }}" class="btn btn-primary">Create a Post</a>
                 </div>
-                <div class="personal-stats-label">Favorite</div>
-            </div>
-
-            <div class="personal-stats-total">
-                <div class="personal-stats-number">
-                    {{ personal_stats.total_reactions }}
-                </div>
-                <div class="personal-stats-label">
-                    Total reactions
-                </div>
-            </div>
-
-            {% if personal_stats.emoji_breakdown %}
-            <div class="personal-stats-breakdown">
-                <div class="personal-stats-breakdown-title">Breakdown:</div>
-                {% for item in personal_stats.emoji_breakdown[:3] %}
-                <div class="breakdown-item">
-                    <span class="breakdown-emoji">{{ item.emoji }}</span>
-                    <div class="breakdown-bar-container">
-                        <div class="breakdown-bar">
-                            <div class="breakdown-bar-fill" style="width: {{ (item.count / personal_stats.total_reactions * 100)|int }}%;"></div>
-                        </div>
-                        <span class="breakdown-count">{{ item.count }}</span>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-        </div>
-        {% endif %}
-
-        <!-- Explanation Box -->
-        <div class="guide-box">
-            <h4 class="guide-title">
-                <span>💡</span> Guide
-            </h4>
-            <p class="guide-item">
-                <strong>🌈 Combo:</strong> 3+ reactions
-            </p>
-            <p class="guide-item">
-                <strong>🏆 Trending:</strong> This week's top
-            </p>
-            <p class="guide-item">
-                <strong>📊 Style:</strong> Your patterns
-            </p>
+            {% endfor %}
         </div>
     </div>
+
+    <div class="sidebar-sticky" style="margin-left: 30px; width: 300px;">
+        </div>
 
 </div>
 {% endblock %}

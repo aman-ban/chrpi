@@ -54,22 +54,17 @@ csrf = CSRFProtect(app)
 ALLOWED_EMOJIS = ['😊', '😂', '🥹', '🥰', '🤩', '🥳']
 
 
-# Jinja filter
-def format_datetime(value, format='%m/%d/%y, %I:%M%p'):
-    """Formats a datetime object or string into the 'MM/DD/YY, HH:MMam/pm' string format."""
+def format_iso(value):
     if value is None:
         return ""
-
     if isinstance(value, str):
         try:
             value = datetime.strptime(value.split('.')[0], '%Y-%m-%d %H:%M:%S')
         except ValueError:
             return value
+    return value.strftime('%Y-%m-%dT%H:%M:%SZ')
 
-    return value.strftime(format).replace(' 0', ' ').lower()
-
-
-app.jinja_env.filters['datetime'] = format_datetime
+app.jinja_env.filters['isoformat'] = format_iso
 
 
 # DB Helpers
@@ -607,26 +602,27 @@ def top():
         """, (user_id,)).fetchall()
     else:
         posts = db.execute("""
-                    SELECT 
-                        posts.*, 
-                        users.username, 
-                        users.profile_image,
-                        (SELECT reaction_emoji FROM post_smiles WHERE post_smiles.post_id = posts.id AND post_smiles.user_id = ?) as user_reaction,
-                        (SELECT GROUP_CONCAT(reaction_emoji || ':' || reaction_count) 
-                         FROM (SELECT reaction_emoji, COUNT(*) as reaction_count 
-                               FROM post_smiles 
-                               WHERE post_id = posts.id 
-                               GROUP BY reaction_emoji 
-                               ORDER BY reaction_count DESC 
-                               LIMIT 3)
-                        ) as top_reactions,
-                        (SELECT COUNT(*) FROM post_smiles WHERE post_id = posts.id AND reaction_emoji = ?) as emoji_count
-                    FROM posts
-                    JOIN users ON posts.user_id = users.id
-                    -- Removed the "WHERE posts.id IN..." filter to show all posts
-                    ORDER BY emoji_count DESC, posts.timestamp DESC
-                    LIMIT 100
-                """, (user_id, filter_emoji)).fetchall()
+                SELECT 
+                    posts.*, 
+                    users.username, 
+                    users.profile_image,
+                    (SELECT reaction_emoji FROM post_smiles WHERE post_smiles.post_id = posts.id AND post_smiles.user_id = ?) as user_reaction,
+                    (SELECT GROUP_CONCAT(reaction_emoji || ':' || reaction_count) 
+                     FROM (SELECT reaction_emoji, COUNT(*) as reaction_count 
+                           FROM post_smiles 
+                           WHERE post_id = posts.id 
+                           GROUP BY reaction_emoji 
+                           ORDER BY reaction_count DESC 
+                           LIMIT 3)
+                    ) as top_reactions,
+                    -- Count ONLY the emoji we are filtering for
+                    (SELECT COUNT(*) FROM post_smiles WHERE post_id = posts.id AND reaction_emoji = ?) as specific_emoji_count
+                FROM posts
+                JOIN users ON posts.user_id = users.id
+                -- Sort by the specific emoji count first, then by total smiles, then by newest
+                ORDER BY specific_emoji_count DESC, posts.smiles DESC, posts.timestamp DESC
+                LIMIT 100
+            """, (user_id, filter_emoji, filter_emoji)).fetchall()
 
     processed_posts = []
     for post in posts:

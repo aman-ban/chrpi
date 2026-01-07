@@ -57,6 +57,27 @@
     <small>Built with kindness • chrpi</small>
   </div>
 </footer>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const timeElements = document.querySelectorAll('.local-time');
 
+        timeElements.forEach(el => {
+            const utcDate = el.getAttribute('data-utc');
+            if (utcDate) {
+                const date = new Date(utcDate);
+                // Customize the formatting options to match your style
+                const options = {
+                    month: 'numeric',
+                    day: 'numeric',
+                    year: '2-digit',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                };
+                el.textContent = date.toLocaleString(undefined, options).replace(',', '').toLowerCase();
+            }
+        });
+    });
+</script>
 </body>
 </html>
