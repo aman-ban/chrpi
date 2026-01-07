@@ -64,7 +64,7 @@ def format_iso(value):
             return value
     return value.strftime('%Y-%m-%dT%H:%M:%SZ')
 
-app.jinja_env.filters['isoformat'] = format_iso
+app.jinja_env.filters['datetime'] = format_iso
 
 
 # DB Helpers
@@ -791,4 +791,6 @@ def serve_uploads(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 if __name__ == "__main__":
+    with app.app_context():
+        init_db()
     app.run(debug=True)
