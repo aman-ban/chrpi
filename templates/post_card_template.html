@@ -9,8 +9,9 @@
             <a href="{{ url_for('user_profile', username=post.username) }}" class="post-username-link">
                 {{ post.username }}
             </a>
-            <span class="post-time local-time" data-utc="{{ post['timestamp']|isoformat }}">
-                {{ post['timestamp']|datetime }} </span>
+            <span class="post-time local-time" data-utc="{{ post['timestamp'] }}">
+                {{ post['timestamp']|datetime }}
+            </span>
         </div>
 
         {% if user and user.id == post.user_id %}

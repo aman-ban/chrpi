@@ -526,18 +526,19 @@ def feed():
             JOIN users ON posts.user_id = users.id
             ORDER BY posts.timestamp DESC
             LIMIT 50
-        """, (me["id"],)).fetchall()
+        """, (me["id"] if me else 0,)).fetchall()
 
     processed_posts = []
     for post in posts:
         post_dict = dict(post)
         reaction_counts = {emoji: 0 for emoji in ALLOWED_EMOJIS}
-        if post_dict['top_reactions']:
+        if post_dict.get('top_reactions'):
             for item in post_dict['top_reactions'].split(','):
                 try:
                     emoji, count = item.split(':')
                     reaction_counts[emoji] = int(count)
-                except ValueError: continue
+                except (ValueError, KeyError):
+                    continue
         post_dict['reaction_counts_dict'] = reaction_counts
         processed_posts.append(post_dict)
 
@@ -773,6 +774,34 @@ def search():
         ).fetchall()
 
     return render_template("search_results.html", users=users, query=query, user=current_user())
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if request.method == "GET":
+        a, b = random.randint(1, 9), random.randint(1, 9)
+        session["captcha_answer"] = str(a + b)
+        return render_template("forgot_password.html", a=a, b=b)
+
+    username = request.form.get("username", "").strip()
+    new_password = request.form.get("new_password", "")
+    captcha = request.form.get("captcha", "")
+
+    if captcha != session.get("captcha_answer"):
+        flash("Math captcha incorrect.")
+        return redirect(url_for("forgot_password"))
+
+    db = get_db()
+    user = db.execute("SELECT id FROM users WHERE username = ?", (username,)).fetchone()
+
+    if user:
+        db.execute("UPDATE users SET password = ? WHERE id = ?",
+                   (generate_password_hash(new_password), user["id"]))
+        db.commit()
+        flash("Password reset successful! Please log in.")
+        return redirect(url_for("login"))
+    else:
+        flash("Username not found.")
+        return redirect(url_for("forgot_password"))
 
 # Error Handlers
 @app.errorhandler(404)
