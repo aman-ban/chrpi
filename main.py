@@ -624,6 +624,7 @@ def top():
                     posts.*, 
                     users.username, 
                     users.profile_image,
+                    -- First ?: user_id
                     (SELECT reaction_emoji FROM post_smiles WHERE post_smiles.post_id = posts.id AND post_smiles.user_id = ?) as user_reaction,
                     (SELECT GROUP_CONCAT(reaction_emoji || ':' || reaction_count) 
                      FROM (SELECT reaction_emoji, COUNT(*) as reaction_count 
@@ -633,14 +634,13 @@ def top():
                            ORDER BY reaction_count DESC 
                            LIMIT 3)
                     ) as top_reactions,
-                    -- Count ONLY the emoji we are filtering for
+                    -- Second ?: filter_emoji
                     (SELECT COUNT(*) FROM post_smiles WHERE post_id = posts.id AND reaction_emoji = ?) as specific_emoji_count
                 FROM posts
                 JOIN users ON posts.user_id = users.id
-                -- Sort by the specific emoji count first, then by total smiles, then by newest
                 ORDER BY specific_emoji_count DESC, posts.smiles DESC, posts.timestamp DESC
                 LIMIT 100
-            """, (user_id, filter_emoji, filter_emoji)).fetchall()
+            """, (user_id, filter_emoji)).fetchall()
 
     processed_posts = []
     for post in posts:
