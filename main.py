@@ -228,7 +228,21 @@ def before_request():
 
 @app.route("/")
 def index():
-    return render_template("index.html", user=current_user())
+    me = current_user()
+    if me:
+        return redirect(url_for('feed'))
+
+    # If not logged in, show them the "Public Discovery" feed
+    db = get_db()
+    posts = db.execute("""
+        SELECT posts.*, users.username, users.profile_image 
+        FROM posts 
+        JOIN users ON posts.user_id = users.id 
+        ORDER BY posts.timestamp DESC LIMIT 10
+    """).fetchall()
+
+    # We pass None for user so the template knows we are guests
+    return render_template("index.html", posts=posts, user=None)
 
 
 @app.route("/register", methods=["GET", "POST"])

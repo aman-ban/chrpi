@@ -49,6 +49,15 @@
 </div>
 
 <main class="container main-content">
+
+  {% if user %}
+    <div class="search-section">
+        <form action="{{ url_for('search') }}" method="GET" class="search-form">
+            <input type="text" name="q" placeholder="Search for positive people...">
+            <button type="submit" class="btn btn-secondary">🔍 Search</button>
+        </form>
+    </div> {% endif %}
+
   {% block content %}{% endblock %}
 </main>
 
