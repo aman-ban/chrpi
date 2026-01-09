@@ -266,8 +266,11 @@ def register():
 
     db = get_db()
     try:
-        db.execute("INSERT INTO users (username, password) VALUES (?, ?)",
-                   (username, generate_password_hash(password)))
+        # Pick a random emoji to be their default "avatar"
+        default_emoji = random.choice(ALLOWED_EMOJIS)
+
+        db.execute("INSERT INTO users (username, password, profile_image) VALUES (?, ?, ?)",
+                   (username, generate_password_hash(password), default_emoji))
         db.commit()
         flash("Registered — please log in.")
         return redirect("/login")

@@ -1,9 +1,15 @@
 <div class="post-card">
     <div class="post-card-header">
         <a href="{{ url_for('user_profile', username=post.username) }}" class="post-avatar-link">
-            <img src="{{ post.profile_image if post.profile_image else url_for('static', filename='default-profile.png') }}"
-                 alt="{{ post.username }}"
-                 class="post-avatar">
+            <div class="post-avatar-container">
+    {% if post.profile_image in allowed_emojis %}
+        <div class="avatar-emoji-placeholder">{{ post.profile_image }}</div>
+    {% else %}
+        <img src="{{ post.profile_image if post.profile_image else url_for('static', filename='default-profile.png') }}"
+             alt="{{ post.username }}"
+             class="post-avatar">
+    {% endif %}
+</div>
         </a>
         <div class="post-user-info">
             <a href="{{ url_for('user_profile', username=post.username) }}" class="post-username-link">

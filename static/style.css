@@ -142,6 +142,26 @@ body {
     border: 2px solid var(--sun-yellow);
 }
 
+.post-avatar-container {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    margin-right: 12px;
+}
+
+.avatar-emoji-placeholder {
+    width: 48px;
+    height: 48px;
+    background-color: var(--sun-yellow-light);
+    border: 2px solid var(--sun-yellow);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
 .post-username-link {
     font-weight: 800;
     color: var(--text-dark);
